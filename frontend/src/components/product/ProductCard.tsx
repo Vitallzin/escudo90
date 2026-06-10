@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Product } from '../../types/product'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { Button } from '../ui/Button'
@@ -9,16 +10,23 @@ type ProductCardProps = {
 export function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="product-card">
-      <div className="product-image" aria-hidden="true">
-        <span>{product.badge}</span>
-      </div>
+      <Link to={`/produto/${product.id}`} className="product-image-wrapper">
+        <div className="product-image">
+          {product.badge && <span className="badge">{product.badge}</span>}
+          <div className="product-placeholder">👕</div>
+        </div>
+      </Link>
       <div className="product-info">
         <span className="product-category">{product.category}</span>
-        <h3>{product.name}</h3>
+        <Link to={`/produto/${product.id}`}>
+          <h3>{product.name}</h3>
+        </Link>
         <p>{product.description}</p>
         <div className="product-footer">
-          <strong>{formatCurrency(product.price)}</strong>
-          <Button size="small">Comprar</Button>
+          <strong className="price">{formatCurrency(product.price)}</strong>
+          <Link to={`/produto/${product.id}`}>
+            <Button size="small">Ver Detalhes</Button>
+          </Link>
         </div>
       </div>
     </article>
