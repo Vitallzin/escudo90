@@ -1,24 +1,53 @@
 import { Link, NavLink } from 'react-router-dom'
 
+const navItems = [
+  { to: '/', label: 'Home' },
+  { to: '/catalogo', label: 'Times' },
+  { to: '/catalogo?categoria=selecoes', label: 'Seleções' },
+  { to: '/catalogo?categoria=retro', label: 'Retrô' },
+  { to: '/catalogo?promocoes=true', label: 'Promoções' },
+]
+
 export function Header() {
   return (
     <header className="site-header">
+      <div className="top-strip">
+        <span>Frete grátis acima de R$ 299</span>
+        <span>Compra segura | Troca fácil | Atendimento premium</span>
+      </div>
+
       <div className="header-container">
         <Link className="brand" to="/">
-          Escudo <span className="brand-yellow">Noventa</span>
+          <span className="brand-mark">E90</span>
+          <span>
+            Escudo <strong>Noventa</strong>
+          </span>
         </Link>
+
         <nav className="nav-links" aria-label="Navegação principal">
-          <NavLink to="/catalogo" className={({ isActive }) => isActive ? 'active' : ''}>
-            Coleções
-          </NavLink>
-          <Link to="/carrinho" className="cart-link">
-            <span className="icon">🛒</span>
-            <span className="cart-count">0</span>
-          </Link>
-          <button className="search-button" aria-label="Pesquisar">
-            <span className="icon">🔍</span>
-          </button>
+          {navItems.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              className={({ isActive }) => (isActive && item.to !== '/' ? 'active' : '')}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
+
+        <div className="header-actions">
+          <button className="icon-button" aria-label="Pesquisar">
+            ⌕
+          </button>
+          <NavLink className="icon-button" to="/perfil" aria-label="Perfil do usuário">
+            ♙
+          </NavLink>
+          <NavLink className="icon-button cart-button" to="/carrinho" aria-label="Carrinho">
+            ◴
+            <span>3</span>
+          </NavLink>
+        </div>
       </div>
     </header>
   )

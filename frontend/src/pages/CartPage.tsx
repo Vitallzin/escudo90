@@ -1,93 +1,80 @@
 import { Link } from 'react-router-dom'
-import { Header } from '../components/layout/Header'
 import { Footer } from '../components/layout/Footer'
+import { Header } from '../components/layout/Header'
+import { ProductVisual } from '../components/product/ProductVisual'
 import { Button } from '../components/ui/Button'
-import { featuredProducts } from '../constants/products'
+import { cartPreview } from '../constants/products'
 import { formatCurrency } from '../utils/formatCurrency'
 
 export function CartPage() {
-  // Simulating cart data
-  const cartItems = [featuredProducts[0], featuredProducts[1]]
-  const total = cartItems.reduce((acc, item) => acc + item.price, 0)
+  const subtotal = cartPreview.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  const coupon = 40
+  const shipping = 0
+  const total = subtotal - coupon + shipping
 
   return (
     <div className="app-shell">
       <Header />
+
       <main>
-        <div className="section-header">
-          <div>
-            <span className="eyebrow">Seu Pedido</span>
-            <h2>Carrinho de Compras</h2>
-          </div>
-        </div>
+        <section className="page-title">
+          <span className="eyebrow">Carrinho persistente</span>
+          <h1>Revise seu pedido</h1>
+          <p>Produtos, tamanhos, quantidades, cupom, frete e total antes do checkout.</p>
+        </section>
 
-        <div className="cart-layout">
+        <section className="cart-layout">
           <div className="cart-list">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {cartItems.map((item) => (
-                <div key={item.id} className="cart-item">
-                  <div className="cart-item-image">
-                    👕
-                  </div>
-                  <div className="cart-item-info" style={{ flex: 1 }}>
-                    <h4>{item.name}</h4>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>Tamanho: M • Categoria: {item.category}</span>
-                  </div>
-                  <div style={{ textAlign: 'right', paddingRight: '2rem' }}>
-                    <strong style={{ display: 'block', fontSize: '1.2rem', color: 'var(--primary-blue)' }}>
-                      {formatCurrency(item.price)}
-                    </strong>
-                  </div>
-                  <button style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    cursor: 'pointer', 
-                    fontSize: '1.2rem',
-                    color: '#ff4d4f',
-                    opacity: 0.6
-                  }}>✕</button>
+            {cartPreview.map((item) => (
+              <article className="cart-item" key={item.product.id}>
+                <ProductVisual colors={item.product.colors} name={item.product.name} />
+                <div className="cart-item-info">
+                  <span>{item.product.league}</span>
+                  <h3>{item.product.name}</h3>
+                  <small>Tamanho {item.size} | Quantidade {item.quantity}</small>
                 </div>
-              ))}
-            </div>
+                <strong>{formatCurrency(item.product.price * item.quantity)}</strong>
+                <button aria-label={`Remover ${item.product.name}`}>×</button>
+              </article>
+            ))}
 
-            <Link to="/catalogo" style={{ display: 'inline-block', marginTop: '2rem', color: 'var(--primary-blue)', fontWeight: 700 }}>
-              &larr; Continuar Comprando
-            </Link>
+            <div className="coupon-box">
+              <label>
+                <span>Cupom de desconto</span>
+                <input defaultValue="TORCIDA10" />
+              </label>
+              <Button size="small" variant="dark">Aplicar</Button>
+            </div>
           </div>
 
-          <div className="cart-summary card">
-            <h3 style={{ marginBottom: '2rem', fontSize: '1.5rem' }}>Resumo do Pedido</h3>
-            
+          <aside className="summary-panel">
+            <h2>Resumo</h2>
             <div className="summary-row">
               <span>Subtotal</span>
-              <span>{formatCurrency(total)}</span>
+              <strong>{formatCurrency(subtotal)}</strong>
             </div>
-            
             <div className="summary-row">
-              <span>Frete Estimado</span>
-              <span style={{ color: '#28a745', fontWeight: 700 }}>Grátis</span>
+              <span>Cupom</span>
+              <strong>-{formatCurrency(coupon)}</strong>
             </div>
-
-            <div className="summary-row" style={{ opacity: 0.6, fontSize: '0.85rem' }}>
-              <span>Cupons</span>
-              <span>-</span>
+            <div className="summary-row">
+              <span>Frete</span>
+              <strong>Grátis</strong>
             </div>
-
             <div className="summary-total">
               <span>Total</span>
-              <span>{formatCurrency(total)}</span>
+              <strong>{formatCurrency(total)}</strong>
             </div>
-
             <Link to="/checkout">
-              <Button style={{ width: '100%', padding: '1.25rem' }}>Finalizar Compra</Button>
+              <Button>Finalizar compra</Button>
             </Link>
-            
-            <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem', opacity: 0.5 }}>
-              Pagamento 100% seguro com criptografia de ponta a ponta.
-            </p>
-          </div>
-        </div>
+            <Link className="continue-link" to="/catalogo">
+              Continuar comprando
+            </Link>
+          </aside>
+        </section>
       </main>
+
       <Footer />
     </div>
   )

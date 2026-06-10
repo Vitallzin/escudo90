@@ -1,37 +1,47 @@
+import { Link } from 'react-router-dom'
+
 export function Footer() {
   return (
     <footer className="site-footer">
       <div className="footer-container">
-        <div className="footer-info">
-          <span className="footer-brand">Escudo Noventa</span>
-          <p>A maior curadoria de camisas premium do Brasil. Qualidade, autenticidade e a nostalgia dos anos 90 em cada detalhe.</p>
-        </div>
-        
-        <div className="footer-links">
-          <h4>Atendimento</h4>
-          <ul>
-            <li><a href="#rastreio">Rastrear Pedido</a></li>
-            <li><a href="#trocas">Trocas e Devoluções</a></li>
-            <li><a href="#faq">Central de Ajuda</a></li>
-          </ul>
+        <div className="footer-brand-block">
+          <Link className="footer-brand" to="/">
+            Escudo Noventa
+          </Link>
+          <p>
+            Plataforma esportiva premium para comprar camisas nacionais e
+            internacionais com curadoria, segurança e atendimento profissional.
+          </p>
         </div>
 
-        <div className="footer-links">
-          <h4>Contato</h4>
-          <ul>
-            <li>WhatsApp: (11) 99999-9999</li>
-            <li>Email: contato@escudonoventa.com</li>
-            <li>Instagram: @escudonoventa</li>
-          </ul>
+        <div className="footer-column">
+          <h4>Loja</h4>
+          <Link to="/catalogo">Catálogo</Link>
+          <Link to="/catalogo?promocoes=true">Promoções</Link>
+          <Link to="/perfil">Minha conta</Link>
+          <Link to="/admin">Painel admin</Link>
+        </div>
+
+        <div className="footer-column">
+          <h4>Atendimento</h4>
+          <a href="#rastreio">Rastrear pedido</a>
+          <a href="#trocas">Trocas e devoluções</a>
+          <a href="#ajuda">Central de ajuda</a>
+          <a href="#contato">Contato</a>
+        </div>
+
+        <div className="footer-column">
+          <h4>Institucional</h4>
+          <a href="#politicas">Políticas da loja</a>
+          <a href="#privacidade">Privacidade</a>
+          <a href="#social">Redes sociais</a>
+          <a href="#legal">Informações legais</a>
         </div>
       </div>
-      
+
       <div className="footer-bottom">
-        <span>&copy; 2026 Escudo Noventa. Todos os direitos reservados.</span>
-        <div style={{ display: 'flex', gap: '2rem' }}>
-          <a href="#privacidade">Privacidade</a>
-          <a href="#termos">Termos</a>
-        </div>
+        <span>© 2026 Escudo Noventa. Todos os direitos reservados.</span>
+        <span>Pagamentos por Mercado Pago, cartões, Pix e antifraude.</span>
       </div>
     </footer>
   )

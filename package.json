@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "backend:dev": "node --experimental-strip-types backend/src/server.ts",
+    "backend:check": "tsc -p tsconfig.backend.json --noEmit",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

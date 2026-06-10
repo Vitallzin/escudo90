@@ -110,8 +110,20 @@ loja-camisas/
 ```bash
 npm install
 npm run dev
+npm run backend:dev
 npm run build
 ```
+
+## Backend
+
+A API roda em `http://localhost:3333` e possui módulos para autenticação,
+usuários, produtos, categorias, favoritos, avaliações, cupons, frete, pedidos,
+pagamentos e administração.
+
+Credenciais iniciais:
+
+- Admin: `admin@escudonoventa.com` / `admin123`
+- Cliente: `cliente@escudonoventa.com` / `cliente123`
 
 ## Objetivo do produto
 

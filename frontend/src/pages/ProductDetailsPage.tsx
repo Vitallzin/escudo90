@@ -1,56 +1,75 @@
-import { useParams, Link } from 'react-router-dom'
-import { Header } from '../components/layout/Header'
-import { Footer } from '../components/layout/Footer'
-import { Button } from '../components/ui/Button'
-import { featuredProducts } from '../constants/products'
-import { formatCurrency } from '../utils/formatCurrency'
 import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { Footer } from '../components/layout/Footer'
+import { Header } from '../components/layout/Header'
+import { ProductVisual } from '../components/product/ProductVisual'
+import { Button } from '../components/ui/Button'
+import { products } from '../constants/products'
+import { formatCurrency, getDiscountPercent } from '../utils/formatCurrency'
 
 export function ProductDetailsPage() {
   const { id } = useParams()
-  const [selectedSize, setSelectedSize] = useState('M')
-  const product = featuredProducts.find(p => p.id === id)
+  const product = products.find((item) => item.id === id)
+  const [selectedSize, setSelectedSize] = useState(product?.sizes[0] ?? 'M')
+  const [quantity, setQuantity] = useState(1)
 
   if (!product) {
     return (
       <div className="app-shell">
         <Header />
-        <main style={{ textAlign: 'center', padding: '10rem 2rem' }}>
-          <h2>Produto não encontrado</h2>
-          <Link to="/catalogo" style={{ color: 'var(--primary-blue)', fontWeight: 700 }}>Voltar ao catálogo</Link>
+        <main className="empty-state">
+          <h1>Produto não encontrado</h1>
+          <Link to="/catalogo">Voltar ao catálogo</Link>
         </main>
         <Footer />
       </div>
     )
   }
 
+  const discount = getDiscountPercent(product.price, product.oldPrice)
+
   return (
     <div className="app-shell">
       <Header />
-      <main style={{ marginTop: '3rem' }}>
-        <div className="grid-2">
-          <div className="product-image-large">
-            <span>👕</span>
+
+      <main>
+        <section className="product-details">
+          <div className="product-gallery">
+            <ProductVisual colors={product.colors} name={product.name} badge={product.badge} large />
+            <div className="gallery-thumbs">
+              {product.colors.map((color) => (
+                <span key={color} style={{ background: color }} />
+              ))}
+            </div>
           </div>
 
-          <div className="product-details-content">
-            <span className="eyebrow">{product.category}</span>
-            <h1 style={{ fontSize: '3.5rem', margin: '1rem 0', color: 'var(--primary-blue)' }}>{product.name}</h1>
-            <strong style={{ fontSize: '2.5rem', display: 'block', marginBottom: '2rem', color: 'var(--secondary-blue)' }}>
-              {formatCurrency(product.price)}
-            </strong>
-            
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-light)', marginBottom: '3rem', lineHeight: '1.8', maxWidth: '500px' }}>
-              {product.description}
-            </p>
+          <div className="product-detail-panel">
+            <span className="eyebrow">{product.club} | {product.season}</span>
+            <h1>{product.name}</h1>
+            <p>{product.description}</p>
 
-            <div style={{ marginBottom: '3rem' }}>
-              <h4 style={{ marginBottom: '1rem', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>Selecione o Tamanho</h4>
+            <div className="detail-rating">
+              <strong>★ {product.rating}</strong>
+              <span>{product.reviews} avaliações verificadas</span>
+              <span>{product.stock} em estoque</span>
+            </div>
+
+            <div className="detail-price-row">
+              <div>
+                {product.oldPrice && <span className="old-price">{formatCurrency(product.oldPrice)}</span>}
+                <strong>{formatCurrency(product.price)}</strong>
+                <small>ou 10x sem juros</small>
+              </div>
+              {discount && <span className="discount-pill">-{discount}%</span>}
+            </div>
+
+            <div className="detail-section">
+              <h3>Tamanho</h3>
               <div className="size-picker">
-                {['P', 'M', 'G', 'GG'].map(size => (
-                  <button 
-                    key={size} 
+                {product.sizes.map((size) => (
+                  <button
                     className={`size-button ${selectedSize === size ? 'active' : ''}`}
+                    key={size}
                     onClick={() => setSelectedSize(size)}
                   >
                     {size}
@@ -59,28 +78,30 @@ export function ProductDetailsPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <Link to="/carrinho" style={{ flex: 1 }}>
-                <Button style={{ width: '100%' }}>Adicionar ao Carrinho</Button>
-              </Link>
-              <Button variant="secondary" style={{ width: '64px', padding: 0 }}>❤</Button>
-            </div>
-
-            <div style={{ marginTop: '4rem', borderTop: '1px solid #eef2f6', paddingTop: '3rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                <div className="info-card">
-                  <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Frete Grátis</strong>
-                  <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Para todo o Brasil em pedidos acima de R$ 299</p>
-                </div>
-                <div className="info-card">
-                  <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Parcelamento</strong>
-                  <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Até 10x sem juros no cartão de crédito</p>
-                </div>
+            <div className="detail-section quantity-row">
+              <h3>Quantidade</h3>
+              <div className="quantity-control">
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+                <span>{quantity}</span>
+                <button onClick={() => setQuantity(quantity + 1)}>+</button>
               </div>
             </div>
+
+            <div className="detail-actions">
+              <Link to="/carrinho">
+                <Button>Adicionar ao carrinho</Button>
+              </Link>
+              <Button variant="ghost">Favoritar</Button>
+            </div>
+
+            <div className="shipping-box">
+              <strong>Frete e garantia</strong>
+              <span>Calcule o frete no carrinho. Troca facilitada em até 7 dias.</span>
+            </div>
           </div>
-        </div>
+        </section>
       </main>
+
       <Footer />
     </div>
   )

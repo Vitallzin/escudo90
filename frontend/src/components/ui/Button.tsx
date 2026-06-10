@@ -1,10 +1,14 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonBase = {
   children: ReactNode
   size?: 'default' | 'small'
-  variant?: 'primary' | 'secondary'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'dark'
+  className?: string
 }
+
+type ButtonProps = ButtonBase & ButtonHTMLAttributes<HTMLButtonElement>
+type ButtonLinkProps = ButtonBase & AnchorHTMLAttributes<HTMLAnchorElement>
 
 export function Button({
   children,
@@ -21,5 +25,19 @@ export function Button({
     >
       {children}
     </button>
+  )
+}
+
+export function ButtonLink({
+  children,
+  size = 'default',
+  variant = 'primary',
+  className = '',
+  ...props
+}: ButtonLinkProps) {
+  return (
+    <a className={`button button-${variant} button-${size} ${className}`.trim()} {...props}>
+      {children}
+    </a>
   )
 }

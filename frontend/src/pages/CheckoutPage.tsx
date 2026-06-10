@@ -1,139 +1,166 @@
-import { Header } from '../components/layout/Header'
-import { Footer } from '../components/layout/Footer'
-import { Button } from '../components/ui/Button'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Footer } from '../components/layout/Footer'
+import { Header } from '../components/layout/Header'
+import { Button } from '../components/ui/Button'
+
+const steps = ['Dados', 'Entrega', 'Pagamento', 'Revisão']
 
 export function CheckoutPage() {
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(0)
 
   return (
     <div className="app-shell">
       <Header />
-      <main style={{ paddingBlock: '4rem' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div className="checkout-steps">
-            {[1, 2, 3].map(s => (
-              <div key={s} className={`step ${step >= s ? 'active' : ''}`}>
-                {s}
+
+      <main>
+        <section className="page-title">
+          <span className="eyebrow">Checkout otimizado</span>
+          <h1>Finalize em poucos passos</h1>
+          <p>Fluxo claro, rápido e preparado para Pix, cartão, cupom e frete.</p>
+        </section>
+
+        <section className="checkout-layout">
+          <div className="checkout-main">
+            <div className="checkout-steps">
+              {steps.map((item, index) => (
+                <button
+                  className={`checkout-step ${index <= step ? 'active' : ''}`}
+                  key={item}
+                  onClick={() => setStep(index)}
+                >
+                  <span>{index + 1}</span>
+                  {item}
+                </button>
+              ))}
+            </div>
+
+            <div className="checkout-panel">
+              {step === 0 && (
+                <fieldset>
+                  <legend>Dados pessoais</legend>
+                  <div className="form-grid">
+                    <label>
+                      Nome completo
+                      <input placeholder="João Silva" />
+                    </label>
+                    <label>
+                      CPF
+                      <input placeholder="000.000.000-00" />
+                    </label>
+                    <label>
+                      E-mail
+                      <input placeholder="joao@email.com" />
+                    </label>
+                    <label>
+                      Telefone
+                      <input placeholder="(11) 99999-9999" />
+                    </label>
+                  </div>
+                </fieldset>
+              )}
+
+              {step === 1 && (
+                <fieldset>
+                  <legend>Endereço e frete</legend>
+                  <div className="form-grid">
+                    <label>
+                      CEP
+                      <input placeholder="00000-000" />
+                    </label>
+                    <label>
+                      Número
+                      <input placeholder="123" />
+                    </label>
+                    <label className="span-2">
+                      Endereço
+                      <input placeholder="Rua, avenida, bairro e cidade" />
+                    </label>
+                  </div>
+                  <div className="shipping-options">
+                    <label>
+                      <input type="radio" defaultChecked />
+                      <span>Expresso - 2 a 4 dias úteis</span>
+                      <strong>Grátis</strong>
+                    </label>
+                    <label>
+                      <input type="radio" />
+                      <span>Retirada em ponto parceiro</span>
+                      <strong>R$ 12,90</strong>
+                    </label>
+                  </div>
+                </fieldset>
+              )}
+
+              {step === 2 && (
+                <fieldset>
+                  <legend>Pagamento</legend>
+                  <div className="payment-grid">
+                    <label className="payment-option selected">
+                      <input type="radio" defaultChecked />
+                      Cartão de crédito
+                    </label>
+                    <label className="payment-option">
+                      <input type="radio" />
+                      Pix com desconto
+                    </label>
+                    <label className="payment-option">
+                      <input type="radio" />
+                      Mercado Pago
+                    </label>
+                  </div>
+                  <div className="form-grid">
+                    <label className="span-2">
+                      Número do cartão
+                      <input placeholder="0000 0000 0000 0000" />
+                    </label>
+                    <label>
+                      Validade
+                      <input placeholder="MM/AA" />
+                    </label>
+                    <label>
+                      CVV
+                      <input placeholder="123" />
+                    </label>
+                  </div>
+                </fieldset>
+              )}
+
+              {step === 3 && (
+                <div className="review-box">
+                  <strong>Pedido pronto para confirmação</strong>
+                  <p>
+                    Camisas separadas, cupom aplicado, frete grátis e pagamento
+                    protegido por antifraude.
+                  </p>
+                  <Link to="/perfil">
+                    <Button>Confirmar pedido</Button>
+                  </Link>
+                </div>
+              )}
+
+              <div className="checkout-actions">
+                <Button variant="ghost" onClick={() => setStep(Math.max(0, step - 1))}>
+                  Voltar
+                </Button>
+                <Button onClick={() => setStep(Math.min(steps.length - 1, step + 1))}>
+                  Continuar
+                </Button>
               </div>
-            ))}
+            </div>
           </div>
 
-          <div className="card">
-            {step === 1 && (
-              <div>
-                <h2 style={{ marginBottom: '2.5rem', color: 'var(--primary-blue)' }}>Dados de Entrega</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <div style={{ gridColumn: 'span 2' }} className="form-group">
-                    <label className="form-label">Nome Completo</label>
-                    <input type="text" className="form-input" placeholder="Ex: João Silva" />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">CEP</label>
-                    <input type="text" className="form-input" placeholder="00000-000" />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Número</label>
-                    <input type="text" className="form-input" placeholder="123" />
-                  </div>
-                  <div style={{ gridColumn: 'span 2' }} className="form-group">
-                    <label className="form-label">Endereço</label>
-                    <input type="text" className="form-input" placeholder="Rua, Avenida..." />
-                  </div>
-                </div>
-                <Button onClick={() => setStep(2)} style={{ marginTop: '2rem', width: '100%', padding: '1.25rem' }}>Continuar para Pagamento</Button>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div>
-                <h2 style={{ marginBottom: '2.5rem', color: 'var(--primary-blue)' }}>Pagamento</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-                  <div style={{ 
-                    padding: '1.5rem', 
-                    border: '2px solid var(--primary-blue)', 
-                    borderRadius: '12px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '1rem',
-                    background: 'var(--soft-yellow)'
-                  }}>
-                    <input type="radio" checked readOnly style={{ width: '20px', height: '20px' }} />
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ display: 'block' }}>Cartão de Crédito</strong>
-                      <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Aprovação instantânea</span>
-                    </div>
-                    <span style={{ fontSize: '1.5rem' }}>💳</span>
-                  </div>
-                  <div style={{ 
-                    padding: '1.5rem', 
-                    border: '1px solid #e2e8f0', 
-                    borderRadius: '12px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '1rem', 
-                    opacity: 0.5,
-                    cursor: 'not-allowed'
-                  }}>
-                    <input type="radio" disabled style={{ width: '20px', height: '20px' }} />
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ display: 'block' }}>PIX</strong>
-                      <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>10% de desconto adicional</span>
-                    </div>
-                    <span style={{ fontSize: '1.5rem' }}>⚡</span>
-                  </div>
-                </div>
-                
-                <div className="form-group">
-                   <label className="form-label">Número do Cartão</label>
-                   <input type="text" className="form-input" placeholder="0000 0000 0000 0000" />
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Validade</label>
-                    <input type="text" className="form-input" placeholder="MM/AA" />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">CVV</label>
-                    <input type="text" className="form-input" placeholder="123" />
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                  <Button variant="secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>Voltar</Button>
-                  <Button onClick={() => setStep(3)} style={{ flex: 1 }}>Finalizar Pedido</Button>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <div style={{ 
-                  width: '100px', 
-                  height: '100px', 
-                  background: '#28a745', 
-                  color: 'white', 
-                  borderRadius: '50%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  fontSize: '3rem',
-                  margin: '0 auto 2rem',
-                  boxShadow: '0 10px 20px rgba(40,167,69,0.2)'
-                }}>
-                  ✓
-                </div>
-                <h2 style={{ marginBottom: '1rem', color: 'var(--primary-blue)', fontSize: '2.5rem' }}>Pedido Realizado!</h2>
-                <p style={{ color: 'var(--text-light)', marginBottom: '3rem', fontSize: '1.1rem', maxWidth: '400px', marginInline: 'auto' }}>
-                  Obrigado pela sua compra. Enviamos um e-mail com a confirmação e o código de rastreio.
-                </p>
-                <Button onClick={() => window.location.href = '/'}>Voltar para a Loja</Button>
-              </div>
-            )}
-          </div>
-        </div>
+          <aside className="summary-panel">
+            <h2>Compra segura</h2>
+            <p>Dados criptografados, antifraude ativo e acompanhamento por e-mail.</p>
+            <div className="summary-row">
+              <span>Total</span>
+              <strong>R$ 879,70</strong>
+            </div>
+          </aside>
+        </section>
       </main>
+
       <Footer />
     </div>
   )
