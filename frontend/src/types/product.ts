@@ -15,6 +15,7 @@ export type Product = {
   badge: string
   colors: string[]
   sizes: string[]
+  image: string
 }
 
 export type CategoryCard = {

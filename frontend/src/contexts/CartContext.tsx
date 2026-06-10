@@ -1,0 +1,42 @@
+import { useState, type ReactNode } from 'react'
+import { CartContext, type CartItem } from './cart-context'
+import type { Product } from '../types/product'
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([])
+
+  function addItem(product: Product, size: string, quantity: number) {
+    setItems((prevItems) => {
+      const existingItemIndex = prevItems.findIndex(
+        (item) => item.product.id === product.id && item.size === size
+      )
+
+      if (existingItemIndex >= 0) {
+        const newItems = [...prevItems]
+        newItems[existingItemIndex].quantity += quantity
+        return newItems
+      }
+
+      return [...prevItems, { product, size, quantity }]
+    })
+  }
+
+  function removeItem(productId: string, size: string) {
+    setItems((prevItems) =>
+      prevItems.filter((item) => !(item.product.id === productId && item.size === size))
+    )
+  }
+
+  function clearCart() {
+    setItems([])
+  }
+
+  const totalCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+
+  return (
+    <CartContext value={{ items, addItem, removeItem, clearCart, totalCount, subtotal }}>
+      {children}
+    </CartContext>
+  )
+}

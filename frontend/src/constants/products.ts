@@ -1,4 +1,10 @@
 import type { CategoryCard, Product } from '../types/product'
+import brasilImage from '../assets/jersey-brasil.jpg'
+import redImage from '../assets/jersey-red.jpg'
+import blaugranaImage from '../assets/jersey-blaugrana.jpg'
+import whiteImage from '../assets/jersey-white.jpg'
+import skyblueImage from '../assets/jersey-skyblue.jpg'
+import stripesImage from '../assets/jersey-stripes.jpg'
 
 export const categories: CategoryCard[] = [
   {
@@ -57,6 +63,7 @@ export const products: Product[] = [
     badge: 'Colecao ouro',
     colors: ['#FFD700', '#0047A1'],
     sizes: ['P', 'M', 'G', 'GG', 'XG'],
+    image: brasilImage,
   },
   {
     id: 'chelsea-home-2026',
@@ -75,6 +82,7 @@ export const products: Product[] = [
     badge: 'Lancamento',
     colors: ['#0047A1', '#FFD700'],
     sizes: ['P', 'M', 'G', 'GG'],
+    image: skyblueImage,
   },
   {
     id: 'boca-juniors-home',
@@ -94,6 +102,7 @@ export const products: Product[] = [
     badge: 'Mais vendida',
     colors: ['#001A3D', '#FFD700'],
     sizes: ['M', 'G', 'GG', 'XG'],
+    image: redImage,
   },
   {
     id: 'real-madrid-away',
@@ -112,6 +121,7 @@ export const products: Product[] = [
     badge: 'Premium',
     colors: ['#F5F5F5', '#0047A1'],
     sizes: ['P', 'M', 'G', 'GG', 'XG'],
+    image: whiteImage,
   },
   {
     id: 'manchester-city-third',
@@ -130,6 +140,7 @@ export const products: Product[] = [
     badge: 'Top avaliada',
     colors: ['#42A5F5', '#001A3D'],
     sizes: ['P', 'M', 'G', 'GG'],
+    image: skyblueImage,
   },
   {
     id: 'milan-champions',
@@ -149,6 +160,7 @@ export const products: Product[] = [
     badge: 'Limitada',
     colors: ['#333333', '#C62828'],
     sizes: ['M', 'G', 'GG'],
+    image: stripesImage,
   },
   {
     id: 'psg-special-gold',
@@ -167,6 +179,7 @@ export const products: Product[] = [
     badge: 'Exclusiva',
     colors: ['#001A3D', '#FFD700'],
     sizes: ['P', 'M', 'G', 'GG', 'XG'],
+    image: blaugranaImage,
   },
   {
     id: 'corinthians-retro-1990',
@@ -185,6 +198,7 @@ export const products: Product[] = [
     badge: 'Retro',
     colors: ['#FFFFFF', '#333333'],
     sizes: ['P', 'M', 'G', 'GG'],
+    image: stripesImage,
   },
 ]
 

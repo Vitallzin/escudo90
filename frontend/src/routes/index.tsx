@@ -1,0 +1,31 @@
+import { Route, Routes } from 'react-router-dom'
+import { AdminDashboardPage } from '../pages/AdminDashboardPage'
+import { CartPage } from '../pages/CartPage'
+import { CheckoutPage } from '../pages/CheckoutPage'
+import { HomePage } from '../pages/HomePage'
+import { ProductDetailsPage } from '../pages/ProductDetailsPage'
+import { ProfilePage } from '../pages/ProfilePage'
+import { PromotionsPage } from '../pages/PromotionsPage'
+import { SelectionsPage } from '../pages/SelectionsPage'
+import { TeamsPage } from '../pages/TeamsPage'
+import { ScrollToTop } from './ScrollToTop'
+
+export function AppRoutes() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/catalogo" element={<TeamsPage />} />
+        <Route path="/times" element={<TeamsPage />} />
+        <Route path="/selecoes" element={<SelectionsPage />} />
+        <Route path="/promocoes" element={<PromotionsPage />} />
+        <Route path="/produto/:id" element={<ProductDetailsPage />} />
+        <Route path="/carrinho" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/perfil" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminDashboardPage />} />
+      </Routes>
+    </>
+  )
+}

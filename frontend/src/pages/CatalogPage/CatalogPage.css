@@ -1,0 +1,36 @@
+.catalog-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-button {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  color: var(--blue-950);
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.filter-button.active {
+  background: var(--blue-800);
+  color: var(--white);
+}
+
+@media (max-width: 820px) {
+  .catalog-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
