@@ -1,8 +1,10 @@
-import { Search, ShoppingBag, User } from 'lucide-react'
+import { ChevronDown, Heart, LogIn, Search, ShoppingBag, User, UserPlus } from 'lucide-react'
+import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import logo from '../../../assets/logo.webp'
 import { useAuth } from '../../../hooks/useAuth'
 import { useCart } from '../../../hooks/useCart'
+import { useFavorites } from '../../../hooks/useFavorites'
 import './Header.css'
 
 const navItems = [
@@ -14,7 +16,9 @@ const navItems = [
 
 export function Header() {
   const { totalCount } = useCart()
+  const { totalFavorites } = useFavorites()
   const { user, isAuthenticated } = useAuth()
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
   const location = useLocation()
   const currentPath = `${location.pathname}${location.search}`
 
@@ -50,16 +54,44 @@ export function Header() {
               <span>{user?.name}</span>
             </NavLink>
           ) : (
-            <NavLink className="account-button" to="/cadastro" aria-label="Criar conta ou entrar">
-              <User aria-hidden="true" />
-              <span>Login</span>
-            </NavLink>
+            <div className="account-menu">
+              <button
+                aria-expanded={isAccountMenuOpen}
+                aria-haspopup="menu"
+                className="account-button"
+                onClick={() => setIsAccountMenuOpen((current) => !current)}
+                type="button"
+              >
+                <User aria-hidden="true" />
+                <span>Login</span>
+                <ChevronDown aria-hidden="true" className={isAccountMenuOpen ? 'rotate' : undefined} />
+              </button>
+
+              {isAccountMenuOpen && (
+                <div className="account-dropdown" role="menu">
+                  <Link onClick={() => setIsAccountMenuOpen(false)} role="menuitem" to="/login">
+                    <LogIn aria-hidden="true" />
+                    <span>Entrar</span>
+                  </Link>
+                  <Link onClick={() => setIsAccountMenuOpen(false)} role="menuitem" to="/cadastro">
+                    <UserPlus aria-hidden="true" />
+                    <span>Cadastrar</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           )}
+
+          <NavLink className="favorite-action" to="/favoritos" aria-label="Abrir lista de desejos">
+            <Heart aria-hidden="true" />
+            <span>Favoritos</span>
+            {isAuthenticated && totalFavorites > 0 && <strong>{totalFavorites}</strong>}
+          </NavLink>
 
           <NavLink className="cart-action" to="/carrinho" aria-label="Abrir carrinho">
             <ShoppingBag aria-hidden="true" />
             <span>Carrinho</span>
-            {totalCount > 0 && <strong>{totalCount}</strong>}
+            {isAuthenticated && totalCount > 0 && <strong>{totalCount}</strong>}
           </NavLink>
         </div>
       </div>

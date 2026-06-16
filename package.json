@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "dev:frontend": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "dev:backend": "node --env-file=.env --experimental-strip-types backend/src/server.ts",
     "backend:dev": "node --env-file=.env --experimental-strip-types backend/src/server.ts",
     "backend:check": "tsc -p tsconfig.backend.json --noEmit",
     "build": "tsc -b && vite build",

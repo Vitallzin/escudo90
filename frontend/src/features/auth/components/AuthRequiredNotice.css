@@ -1,0 +1,75 @@
+.auth-required {
+  align-items: center;
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 193, 7, 0.42);
+  border-radius: 12px;
+  color: var(--blue-950);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 34px 1fr auto;
+  padding: 16px;
+}
+
+.auth-required svg {
+  color: var(--blue-800);
+  height: 24px;
+  width: 24px;
+}
+
+.auth-required div {
+  display: grid;
+  gap: 4px;
+}
+
+.auth-required strong {
+  font-weight: 900;
+}
+
+.auth-required span {
+  color: var(--gray-500);
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.auth-required a {
+  align-items: center;
+  background: var(--blue-950);
+  border-radius: 10px;
+  color: var(--white);
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.auth-required--compact {
+  align-items: start;
+  grid-template-columns: 28px 1fr;
+  margin: 14px 22px 0;
+  padding: 12px;
+}
+
+.auth-required--compact svg {
+  height: 20px;
+  width: 20px;
+}
+
+.auth-required--compact a {
+  grid-column: 2;
+  justify-self: start;
+  min-height: 36px;
+  padding: 0 14px;
+}
+
+@media (max-width: 640px) {
+  .auth-required {
+    align-items: start;
+    grid-template-columns: 30px 1fr;
+  }
+
+  .auth-required a {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

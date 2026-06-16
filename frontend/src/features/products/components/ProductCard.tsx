@@ -1,6 +1,10 @@
 import { Heart, Star } from 'lucide-react'
+import { useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
+import { AuthRequiredNotice } from '../../auth'
+import { useAuth } from '../../../hooks/useAuth'
+import { useFavorites } from '../../../hooks/useFavorites'
 import type { Product } from '../../../types/product'
 import { formatCurrency, getDiscountPercent } from '../../../utils/formatCurrency'
 import './ProductCard.css'
@@ -11,18 +15,39 @@ type ProductCardProps = {
 
 export function ProductCard({ product }: ProductCardProps) {
   const discount = getDiscountPercent(product.price, product.oldPrice)
+  const { isAuthenticated } = useAuth()
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const [showAuthNotice, setShowAuthNotice] = useState(false)
+  const favorited = isFavorite(product.id)
+
+  function handleFavorite(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+
+    if (!isAuthenticated) {
+      setShowAuthNotice(true)
+      return
+    }
+
+    setShowAuthNotice(false)
+    toggleFavorite(product.id)
+  }
 
   return (
     <article className="product-card">
-      <Link to={`/produto/${product.id}`} className="product-image-link">
-        <div className="product-photo-wrap">
+      <div className="product-photo-wrap">
+        <Link to={`/produto/${product.id}`} className="product-image-link">
           <img src={product.image} alt={product.name} loading="lazy" />
-          {discount && <span className="product-badge">-{discount}%</span>}
-          <button aria-label="Favoritar" className="favorite-button" onClick={(event) => event.preventDefault()}>
-            <Heart aria-hidden="true" />
-          </button>
-        </div>
-      </Link>
+        </Link>
+        {discount && <span className="product-badge">-{discount}%</span>}
+        <button
+          aria-label={favorited ? 'Remover dos favoritos' : 'Favoritar'}
+          className={favorited ? 'favorite-button active' : 'favorite-button'}
+          onClick={handleFavorite}
+          type="button"
+        >
+          <Heart aria-hidden="true" fill={favorited ? 'currentColor' : 'none'} />
+        </button>
+      </div>
 
       <div className="product-info">
         <div className="product-meta">
@@ -55,6 +80,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </Link>
         </div>
       </div>
+      {showAuthNotice && (
+        <AuthRequiredNotice
+          compact
+          message="Para salvar camisas na sua lista de desejos, entre na sua conta."
+          title="Login necessario"
+        />
+      )}
     </article>
   )
 }

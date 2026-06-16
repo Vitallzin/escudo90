@@ -1,13 +1,12 @@
+import { Link } from 'react-router-dom'
 import { Footer } from '../../components/layout/Footer'
 import { Header } from '../../components/layout/Header'
-import { FavoritesPreview } from '../../features/favorites'
-import { OrderTable } from '../../features/orders'
-import { ProfileSidebar, ProfileStats } from '../../features/profile'
-import { OrderService } from '../../services/orderService'
+import { Button } from '../../components/ui/Button'
+import { useAuth } from '../../hooks/useAuth'
 import './ProfilePage.css'
 
 export function ProfilePage() {
-  const orders = OrderService.getOrders()
+  const { user, isAuthenticated, logout } = useAuth()
 
   return (
     <div className="app-shell">
@@ -15,20 +14,38 @@ export function ProfilePage() {
 
       <main>
         <section className="page-title">
-          <span className="eyebrow">Área do cliente</span>
+          <span className="eyebrow">Area do cliente</span>
           <h1>Minha conta</h1>
-          <p>Pedidos em tempo real, favoritos, endereços, dados pessoais e segurança.</p>
+          <p>Gerencie seu acesso e seus dados quando estiver conectado.</p>
         </section>
 
-        <section className="account-layout">
-          <ProfileSidebar />
+        {isAuthenticated && user ? (
+          <section className="profile-panel">
+            <div>
+              <span className="eyebrow">Dados da conta</span>
+              <h2>{user.name}</h2>
+              <p>{user.email}</p>
+              <strong>{user.role === 'admin' ? 'Administrador' : 'Cliente'}</strong>
+            </div>
 
-          <div className="account-content">
-            <ProfileStats />
-            <OrderTable orders={orders} />
-            <FavoritesPreview />
-          </div>
-        </section>
+            <Button variant="dark" onClick={logout}>
+              Sair da conta
+            </Button>
+          </section>
+        ) : (
+          <section className="profile-empty">
+            <h2>Entre para acessar sua conta.</h2>
+            <p>Depois de entrar, suas informacoes reais de cliente vao aparecer aqui.</p>
+            <div>
+              <Link className="profile-action" to="/login">
+                Entrar
+              </Link>
+              <Link className="profile-action profile-action--light" to="/cadastro">
+                Cadastrar
+              </Link>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

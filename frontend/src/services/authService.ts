@@ -18,6 +18,11 @@ export type RegisterPayload = {
   acceptTerms: boolean
 }
 
+export type LoginPayload = {
+  email: string
+  password: string
+}
+
 export type AuthResponse = {
   user: AuthUser
   token: string
@@ -26,13 +31,20 @@ export type AuthResponse = {
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
 
 async function request<TResponse>(path: string, options: RequestInit) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
+  let response: Response
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    })
+  } catch {
+    throw new Error('Nao foi possivel conectar ao servidor. Verifique se o backend esta rodando.')
+  }
+
   const payload = (await response.json()) as { data?: TResponse; error?: { message?: string } }
 
   if (!response.ok) {
@@ -49,6 +61,12 @@ async function request<TResponse>(path: string, options: RequestInit) {
 export const AuthService = {
   register(payload: RegisterPayload) {
     return request<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  },
+  login(payload: LoginPayload) {
+    return request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     })

@@ -3,14 +3,17 @@ import { Link } from 'react-router-dom'
 import { Footer } from '../../components/layout/Footer'
 import { Header } from '../../components/layout/Header'
 import { Button } from '../../components/ui/Button'
+import { AuthRequiredNotice } from '../../features/auth'
 import { CartSummary } from '../../features/cart'
 import { ProductVisual } from '../../features/products'
+import { useAuth } from '../../hooks/useAuth'
 import { useCart } from '../../hooks/useCart'
 import { formatCurrency } from '../../utils/formatCurrency'
 import './CartPage.css'
 
 export function CartPage() {
   const { items, removeItem, subtotal } = useCart()
+  const { isAuthenticated } = useAuth()
   const coupon = items.length > 0 ? 40 : 0
   const shipping = 0
   const total = Math.max(0, subtotal - coupon + shipping)
@@ -26,12 +29,17 @@ export function CartPage() {
           <p>Produtos, tamanhos, quantidades, cupom, frete e total antes do checkout.</p>
         </section>
 
-        {items.length === 0 ? (
+        {!isAuthenticated ? (
+          <AuthRequiredNotice
+            message="Entre para acessar seu carrinho, manter seus itens salvos e continuar a compra."
+            title="Carrinho exclusivo para clientes"
+          />
+        ) : items.length === 0 ? (
           <section className="empty-state">
-            <h2>Seu carrinho está vazio</h2>
+            <h2>Seu carrinho esta vazio</h2>
             <p>Aproveite nossas ofertas e encontre seu manto favorito.</p>
             <Link to="/times">
-              <Button>Ir para o catálogo</Button>
+              <Button>Ir para o catalogo</Button>
             </Link>
           </section>
         ) : (
@@ -51,6 +59,7 @@ export function CartPage() {
                   <button
                     aria-label={`Remover ${item.product.name}`}
                     onClick={() => removeItem(item.product.id, item.size)}
+                    type="button"
                   >
                     <X aria-hidden="true" />
                   </button>

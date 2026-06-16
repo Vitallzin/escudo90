@@ -1,30 +1,85 @@
-import { ArrowLeft, Star } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Heart, Star } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Footer } from '../../components/layout/Footer'
 import { Header } from '../../components/layout/Header'
 import { Button } from '../../components/ui/Button'
+import { AuthRequiredNotice } from '../../features/auth'
 import { ProductCard } from '../../features/products'
+import { useAuth } from '../../hooks/useAuth'
 import { useCart } from '../../hooks/useCart'
+import { useFavorites } from '../../hooks/useFavorites'
 import { ProductService } from '../../services/productService'
+import type { Product } from '../../types/product'
 import { formatCurrency, getDiscountPercent } from '../../utils/formatCurrency'
 import './ProductDetailsPage.css'
 
 export function ProductDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const product = ProductService.getProductById(id ?? '')
   const { addItem } = useCart()
-  const [selectedSize, setSelectedSize] = useState(product?.sizes[0] ?? 'M')
+  const { isAuthenticated } = useAuth()
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const [product, setProduct] = useState<Product>()
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedSize, setSelectedSize] = useState('M')
   const [quantity, setQuantity] = useState(1)
+  const [authNotice, setAuthNotice] = useState('')
+
+  useEffect(() => {
+    let shouldUpdate = true
+
+    async function loadProduct() {
+      setIsLoading(true)
+      const [nextProduct, products] = await Promise.all([
+        ProductService.getProductById(id ?? ''),
+        ProductService.getProducts(),
+      ])
+
+      if (shouldUpdate) {
+        setProduct(nextProduct)
+        setSelectedSize(nextProduct?.sizes[0] ?? 'M')
+        setRelatedProducts(
+          products
+            .filter(
+              (item) =>
+                nextProduct &&
+                item.id !== nextProduct.id &&
+                (item.category === nextProduct.category || item.league === nextProduct.league),
+            )
+            .slice(0, 4),
+        )
+        setIsLoading(false)
+      }
+    }
+
+    void loadProduct()
+
+    return () => {
+      shouldUpdate = false
+    }
+  }, [id])
+
+  if (isLoading) {
+    return (
+      <div className="app-shell">
+        <Header />
+        <main className="empty-state">
+          <h1>Carregando produto...</h1>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   if (!product) {
     return (
       <div className="app-shell">
         <Header />
         <main className="empty-state">
-          <h1>Produto não encontrado</h1>
-          <Link to="/times">Voltar ao catálogo</Link>
+          <h1>Produto nao encontrado</h1>
+          <Link to="/times">Voltar ao catalogo</Link>
         </main>
         <Footer />
       </div>
@@ -32,18 +87,29 @@ export function ProductDetailsPage() {
   }
 
   const discount = getDiscountPercent(product.price, product.oldPrice)
-  const relatedProducts = ProductService.getProducts()
-    .filter(
-      (item) =>
-        item.id !== product.id &&
-        (item.category === product.category || item.league === product.league),
-    )
-    .slice(0, 4)
 
   function handleAddToCart() {
-    if (product) {
-      addItem(product, selectedSize, quantity)
+    if (!product) return
+
+    if (!isAuthenticated) {
+      setAuthNotice('Para adicionar produtos ao carrinho, entre na sua conta.')
+      return
     }
+
+    setAuthNotice('')
+    addItem(product, selectedSize, quantity)
+  }
+
+  function handleFavorite() {
+    if (!product) return
+
+    if (!isAuthenticated) {
+      setAuthNotice('Para salvar produtos na lista de desejos, entre na sua conta.')
+      return
+    }
+
+    setAuthNotice('')
+    toggleFavorite(product.id)
   }
 
   return (
@@ -70,7 +136,9 @@ export function ProductDetailsPage() {
           </div>
 
           <div className="product-detail-panel">
-            <span className="eyebrow">{product.club} | {product.season}</span>
+            <span className="eyebrow">
+              {product.club} | {product.season}
+            </span>
             <h1>{product.name}</h1>
             <p>{product.description}</p>
 
@@ -79,7 +147,7 @@ export function ProductDetailsPage() {
                 <Star aria-hidden="true" />
                 {product.rating}
               </strong>
-              <span>{product.reviews} avaliações verificadas</span>
+              <span>{product.reviews} avaliacoes verificadas</span>
               <span>{product.stock} em estoque</span>
             </div>
 
@@ -100,6 +168,7 @@ export function ProductDetailsPage() {
                     className={`size-button ${selectedSize === size ? 'active' : ''}`}
                     key={size}
                     onClick={() => setSelectedSize(size)}
+                    type="button"
                   >
                     {size}
                   </button>
@@ -110,20 +179,29 @@ export function ProductDetailsPage() {
             <div className="detail-section quantity-row">
               <h3>Quantidade</h3>
               <div className="quantity-control">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} type="button">
+                  -
+                </button>
                 <span>{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)}>+</button>
+                <button onClick={() => setQuantity(quantity + 1)} type="button">
+                  +
+                </button>
               </div>
             </div>
 
             <div className="detail-actions">
               <Button onClick={handleAddToCart}>Adicionar ao carrinho</Button>
-              <Button variant="ghost">Favoritar</Button>
+              <Button variant="ghost" onClick={handleFavorite}>
+                <Heart aria-hidden="true" fill={isFavorite(product.id) ? 'currentColor' : 'none'} />
+                {isFavorite(product.id) ? 'Favoritado' : 'Favoritar'}
+              </Button>
             </div>
+
+            {authNotice && <AuthRequiredNotice message={authNotice} title="Login necessario" />}
 
             <div className="shipping-box">
               <strong>Frete e garantia</strong>
-              <span>Calcule o frete no carrinho. Troca facilitada em até 7 dias.</span>
+              <span>Calcule o frete no carrinho. Troca facilitada em ate 7 dias.</span>
             </div>
           </div>
         </section>
@@ -132,7 +210,7 @@ export function ProductDetailsPage() {
           <section className="related-products">
             <div className="section-header">
               <div>
-                <span className="eyebrow">Você também pode gostar</span>
+                <span className="eyebrow">Voce tambem pode gostar</span>
                 <h2>Produtos semelhantes</h2>
               </div>
               <Link to="/times">Ver mais camisas</Link>

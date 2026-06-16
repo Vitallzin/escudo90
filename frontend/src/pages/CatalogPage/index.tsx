@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Footer } from '../../components/layout/Footer'
 import { Header } from '../../components/layout/Header'
@@ -19,22 +19,44 @@ const filters = [
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [sort, setSort] = useState('relevancia')
+  const [products, setProducts] = useState<Awaited<ReturnType<typeof ProductService.getProducts>>>([])
+  const [isLoading, setIsLoading] = useState(true)
   const activeFilter = searchParams.get('categoria') ?? 'todos'
   const onlyPromotions = searchParams.get('promocoes') === 'true'
 
-  const filteredProducts = useMemo(() => {
-    const items = ProductService.filterProducts({
-      category: activeFilter,
-      promotions: onlyPromotions,
-    })
+  useEffect(() => {
+    let shouldUpdate = true
 
-    return [...items].sort((a, b) => {
+    async function loadProducts() {
+      setIsLoading(true)
+      const items = await ProductService.filterProducts({
+        category: activeFilter,
+        promotions: onlyPromotions,
+      })
+
+      if (shouldUpdate) {
+        setProducts(items)
+        setIsLoading(false)
+      }
+    }
+
+    void loadProducts()
+
+    return () => {
+      shouldUpdate = false
+    }
+  }, [activeFilter, onlyPromotions])
+
+  const filteredProducts = useMemo(
+    () =>
+      [...products].sort((a, b) => {
       if (sort === 'menor-preco') return a.price - b.price
       if (sort === 'maior-preco') return b.price - a.price
       if (sort === 'avaliacao') return b.rating - a.rating
       return b.reviews - a.reviews
-    })
-  }, [activeFilter, onlyPromotions, sort])
+      }),
+    [products, sort],
+  )
 
   function selectFilter(filter: string) {
     if (filter === 'todos') {
@@ -89,11 +111,17 @@ export function CatalogPage() {
           </label>
         </section>
 
-        <section className="product-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </section>
+        {isLoading ? (
+          <section className="empty-state">
+            <h2>Carregando produtos...</h2>
+          </section>
+        ) : (
+          <section className="product-grid">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </section>
+        )}
       </main>
 
       <Footer />

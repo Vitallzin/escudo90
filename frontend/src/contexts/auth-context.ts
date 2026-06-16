@@ -10,7 +10,6 @@ export type AuthContextData = {
   user: User | null
   isAuthenticated: boolean
   authenticate: (user: User) => void
-  login: () => void
   logout: () => void
 }
 

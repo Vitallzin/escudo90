@@ -17,6 +17,7 @@
 
 .product-image-link {
   display: block;
+  height: 100%;
 }
 
 .product-photo-wrap {
@@ -82,6 +83,11 @@
   background: var(--gold);
   color: var(--blue-950);
   transform: scale(1.05);
+}
+
+.favorite-button.active {
+  background: var(--gold);
+  color: var(--blue-950);
 }
 
 .product-info {

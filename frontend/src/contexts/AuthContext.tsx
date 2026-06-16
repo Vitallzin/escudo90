@@ -4,14 +4,6 @@ import { AuthContext, type User } from './auth-context'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
 
-  function login() {
-    setUser({
-      name: 'Marcos Oliveira',
-      email: 'marcos@email.com',
-      role: 'customer',
-    })
-  }
-
   function authenticate(nextUser: User) {
     setUser(nextUser)
   }
@@ -21,7 +13,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext value={{ user, isAuthenticated: !!user, authenticate, login, logout }}>
+    <AuthContext value={{ user, isAuthenticated: !!user, authenticate, logout }}>
       {children}
     </AuthContext>
   )

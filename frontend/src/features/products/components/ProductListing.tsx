@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ProductService } from '../../../services/productService'
 import type { Product } from '../../../types/product'
@@ -28,17 +28,35 @@ export function ProductListing({
 }: ProductListingProps) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [sort, setSort] = useState('relevancia')
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const activeFilter = searchParams.get('filtro') ?? 'todos'
 
-  const filteredProducts = useMemo(() => {
-    const items = ProductService.filterProducts({
-      category: activeFilter,
-      group,
-      promotions,
-    })
+  useEffect(() => {
+    let shouldUpdate = true
 
-    return sortProducts(items, sort)
-  }, [activeFilter, group, promotions, sort])
+    async function loadProducts() {
+      setIsLoading(true)
+      const items = await ProductService.filterProducts({
+        category: activeFilter,
+        group,
+        promotions,
+      })
+
+      if (shouldUpdate) {
+        setProducts(items)
+        setIsLoading(false)
+      }
+    }
+
+    void loadProducts()
+
+    return () => {
+      shouldUpdate = false
+    }
+  }, [activeFilter, group, promotions])
+
+  const filteredProducts = useMemo(() => sortProducts(products, sort), [products, sort])
 
   function selectFilter(filter: string) {
     if (filter === 'todos') {
@@ -81,11 +99,17 @@ export function ProductListing({
         </label>
       </section>
 
-      <section className="product-grid">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </section>
+      {isLoading ? (
+        <section className="empty-state">
+          <h2>Carregando produtos...</h2>
+        </section>
+      ) : (
+        <section className="product-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </section>
+      )}
     </>
   )
 }

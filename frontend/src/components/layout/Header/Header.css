@@ -87,7 +87,12 @@
   gap: 12px;
 }
 
+.account-menu {
+  position: relative;
+}
+
 .account-button,
+.favorite-action,
 .cart-action {
   align-items: center;
   border-radius: 999px;
@@ -106,6 +111,7 @@
   cursor: pointer;
 }
 
+.favorite-action,
 .cart-action {
   background: rgba(255, 255, 255, 0.12);
   color: var(--white);
@@ -113,11 +119,71 @@
 }
 
 .account-button svg,
+.favorite-action svg,
 .cart-action svg {
   height: 19px;
   width: 19px;
 }
 
+.account-button .rotate {
+  transform: rotate(180deg);
+}
+
+.account-dropdown {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  display: grid;
+  gap: 4px;
+  min-width: 174px;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 30;
+}
+
+.account-dropdown::before {
+  background: var(--white);
+  border-left: 1px solid var(--gray-100);
+  border-top: 1px solid var(--gray-100);
+  content: "";
+  height: 10px;
+  position: absolute;
+  right: 22px;
+  top: -6px;
+  transform: rotate(45deg);
+  width: 10px;
+}
+
+.account-dropdown a,
+.account-dropdown button {
+  align-items: center;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--blue-950);
+  cursor: pointer;
+  display: flex;
+  font-weight: 900;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 10px;
+  text-align: left;
+}
+
+.account-dropdown a:hover,
+.account-dropdown button:hover {
+  background: var(--gold-soft);
+}
+
+.account-dropdown svg {
+  color: var(--blue-800);
+  height: 18px;
+  width: 18px;
+}
+
+.favorite-action strong,
 .cart-action strong {
   align-items: center;
   background: var(--gold);
@@ -208,14 +274,20 @@
   }
 
   .account-button,
+  .favorite-action,
   .cart-action {
     min-height: 40px;
     padding: 0 12px;
   }
 
   .account-button span,
+  .favorite-action span,
   .cart-action span {
     display: none;
+  }
+
+  .account-dropdown span {
+    display: inline;
   }
 
   .nav-links {
