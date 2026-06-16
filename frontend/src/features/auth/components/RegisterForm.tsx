@@ -1,7 +1,9 @@
 import { Eye, EyeOff, Lock, Mail, Phone, ShieldCheck, UserRound } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { AuthService, type RegisterPayload } from '../../../services/authService'
+import { formatCpf, formatPhone, onlyDigits } from '../../../utils/inputMasks'
 import './RegisterForm.css'
 
 const initialForm: RegisterPayload = {
@@ -16,6 +18,7 @@ const initialForm: RegisterPayload = {
 
 export function RegisterForm() {
   const { authenticate } = useAuth()
+  const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [showPassword, setShowPassword] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
@@ -42,15 +45,23 @@ export function RegisterForm() {
     setMessage('')
 
     try {
-      const result = await AuthService.register(form)
+      const result = await AuthService.register({
+        ...form,
+        phone: onlyDigits(form.phone ?? ''),
+        document: onlyDigits(form.document ?? ''),
+      })
       authenticate({
-        name: result.user.name,
-        email: result.user.email,
-        role: result.user.role,
+        user: {
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role,
+        },
+        token: result.token,
       })
       setStatus('success')
       setMessage('Cadastro criado com sucesso. Sua conta ja esta ativa para comprar.')
       setForm(initialForm)
+      navigate('/')
     } catch (error) {
       setStatus('idle')
       setMessage(error instanceof Error ? error.message : 'Nao foi possivel criar sua conta')
@@ -100,7 +111,7 @@ export function RegisterForm() {
               autoComplete="tel"
               inputMode="tel"
               name="phone"
-              onChange={(event) => updateField('phone', event.target.value)}
+              onChange={(event) => updateField('phone', formatPhone(event.target.value))}
               placeholder="(11) 99999-9999"
               type="tel"
               value={form.phone}
@@ -115,7 +126,7 @@ export function RegisterForm() {
             <input
               inputMode="numeric"
               name="document"
-              onChange={(event) => updateField('document', event.target.value)}
+              onChange={(event) => updateField('document', formatCpf(event.target.value))}
               placeholder="000.000.000-00"
               type="text"
               value={form.document}

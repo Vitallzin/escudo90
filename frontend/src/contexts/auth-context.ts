@@ -6,10 +6,16 @@ export type User = {
   role: 'customer' | 'admin'
 }
 
+export type AuthSession = {
+  user: User
+  token: string
+}
+
 export type AuthContextData = {
   user: User | null
+  token: string | null
   isAuthenticated: boolean
-  authenticate: (user: User) => void
+  authenticate: (session: AuthSession) => void
   logout: () => void
 }
 

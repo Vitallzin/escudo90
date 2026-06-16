@@ -1,4 +1,4 @@
-import { ChevronDown, Heart, LogIn, Search, ShoppingBag, User, UserPlus } from 'lucide-react'
+import { ChevronDown, Heart, LogIn, LogOut, Search, Settings, ShoppingBag, User, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import logo from '../../../assets/logo.webp'
@@ -17,7 +17,7 @@ const navItems = [
 export function Header() {
   const { totalCount } = useCart()
   const { totalFavorites } = useFavorites()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
   const location = useLocation()
   const currentPath = `${location.pathname}${location.search}`
@@ -28,6 +28,10 @@ export function Header() {
     }
 
     return currentPath === path
+  }
+
+  function getHeaderName(name?: string) {
+    return name?.trim().split(/\s+/).slice(0, 2).join(' ') ?? ''
   }
 
   return (
@@ -49,10 +53,39 @@ export function Header() {
 
         <div className="header-actions">
           {isAuthenticated ? (
-            <NavLink className="account-button" to="/perfil" aria-label="Abrir minha conta">
-              <User aria-hidden="true" />
-              <span>{user?.name}</span>
-            </NavLink>
+            <div className="account-menu">
+              <button
+                aria-expanded={isAccountMenuOpen}
+                aria-haspopup="menu"
+                className="account-button"
+                onClick={() => setIsAccountMenuOpen((current) => !current)}
+                type="button"
+              >
+                <User aria-hidden="true" />
+                <span>{getHeaderName(user?.name)}</span>
+                <ChevronDown aria-hidden="true" className={isAccountMenuOpen ? 'rotate' : undefined} />
+              </button>
+
+              {isAccountMenuOpen && (
+                <div className="account-dropdown" role="menu">
+                  <Link onClick={() => setIsAccountMenuOpen(false)} role="menuitem" to="/perfil">
+                    <Settings aria-hidden="true" />
+                    <span>Configuracao</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout()
+                      setIsAccountMenuOpen(false)
+                    }}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <LogOut aria-hidden="true" />
+                    <span>Sair da conta</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="account-menu">
               <button

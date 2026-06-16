@@ -92,6 +92,116 @@
   text-align: center;
 }
 
+.cart-favorites {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 34px;
+  overflow: hidden;
+}
+
+.cart-favorites .table-header {
+  align-items: center;
+}
+
+.cart-favorites .table-header .eyebrow {
+  margin-bottom: 6px;
+}
+
+.cart-favorites-empty {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 34px;
+  text-align: center;
+}
+
+.cart-favorites-empty svg {
+  color: var(--gold);
+  height: 36px;
+  width: 36px;
+}
+
+.cart-favorites-empty p {
+  color: var(--gray-500);
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.cart-favorites-empty a {
+  color: var(--blue-800);
+  font-weight: 900;
+}
+
+.cart-favorites-list {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.cart-favorite-item {
+  align-items: center;
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 104px 1fr auto auto;
+  padding: 14px;
+}
+
+.cart-favorite-item .jersey {
+  min-height: 64px;
+}
+
+.cart-favorite-item div:nth-child(2) {
+  display: grid;
+  gap: 5px;
+}
+
+.cart-favorite-item span {
+  color: var(--gray-500);
+  font-weight: 800;
+}
+
+.cart-favorite-item h3 {
+  color: var(--blue-950);
+}
+
+.cart-favorite-item strong {
+  color: var(--blue-800);
+}
+
+.cart-favorite-item > button {
+  align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 900;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.cart-favorite-item > button:not(.remove-favorite) {
+  background: var(--gold);
+  color: var(--blue-950);
+}
+
+.cart-favorite-item .remove-favorite {
+  background: var(--gray-50);
+  color: var(--danger);
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+}
+
+.cart-favorite-item svg {
+  height: 18px;
+  width: 18px;
+}
+
 @media (max-width: 1120px) {
   .cart-layout {
     grid-template-columns: 1fr;
@@ -103,8 +213,13 @@
     grid-template-columns: 96px 1fr;
   }
 
+  .cart-favorite-item {
+    grid-template-columns: 86px 1fr;
+  }
+
   .cart-item > strong,
-  .cart-item > button {
+  .cart-item > button,
+  .cart-favorite-item > button {
     justify-self: start;
   }
 }
