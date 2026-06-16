@@ -14,7 +14,7 @@ const navItems = [
 
 export function Header() {
   const { totalCount } = useCart()
-  const { user, isAuthenticated, login } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const location = useLocation()
   const currentPath = `${location.pathname}${location.search}`
 
@@ -50,10 +50,10 @@ export function Header() {
               <span>{user?.name}</span>
             </NavLink>
           ) : (
-            <button className="account-button" type="button" onClick={login}>
+            <NavLink className="account-button" to="/cadastro" aria-label="Criar conta ou entrar">
               <User aria-hidden="true" />
               <span>Login</span>
-            </button>
+            </NavLink>
           )}
 
           <NavLink className="cart-action" to="/carrinho" aria-label="Abrir carrinho">

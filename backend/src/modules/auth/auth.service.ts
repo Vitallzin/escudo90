@@ -1,8 +1,10 @@
 import { store } from '../../database/store.ts'
+import { hashPassword, verifyPassword } from '../../services/password.service.ts'
+import { signToken } from '../../services/token.service.ts'
 import type { User, UserRole } from '../../types.ts'
 import { assert } from '../../utils/api-error.ts'
 import { createId } from '../../utils/id.ts'
-import { signToken } from '../../services/token.service.ts'
+import { parseLoginInput, parseRegisterInput } from './auth.validators.ts'
 
 export function sanitizeUser(user: User) {
   const { password, ...safeUser } = user
@@ -12,21 +14,22 @@ export function sanitizeUser(user: User) {
 }
 
 export function registerUser(input: Record<string, unknown>) {
-  const name = String(input.name ?? '').trim()
-  const email = String(input.email ?? '').trim().toLowerCase()
-  const password = String(input.password ?? '')
+  const { name, email, password, phone, document } = parseRegisterInput(input)
 
-  assert(name.length >= 3, 422, 'Informe um nome válido')
-  assert(email.includes('@'), 422, 'Informe um e-mail válido')
-  assert(password.length >= 6, 422, 'A senha deve ter pelo menos 6 caracteres')
-  assert(!store.users.some((user) => user.email === email), 409, 'E-mail já cadastrado')
+  assert(!store.users.some((user) => user.email === email), 409, 'E-mail ja cadastrado')
+
+  if (document) {
+    assert(!store.users.some((user) => user.document === document), 409, 'CPF ja cadastrado')
+  }
 
   const user: User = {
     id: createId('usr'),
     name,
     email,
-    password,
+    password: hashPassword(password),
     role: 'customer',
+    phone,
+    document,
     favorites: [],
     addresses: [],
     createdAt: new Date().toISOString(),
@@ -41,11 +44,10 @@ export function registerUser(input: Record<string, unknown>) {
 }
 
 export function loginUser(input: Record<string, unknown>) {
-  const email = String(input.email ?? '').trim().toLowerCase()
-  const password = String(input.password ?? '')
-  const user = store.users.find((item) => item.email === email && item.password === password)
+  const { email, password } = parseLoginInput(input)
+  const user = store.users.find((item) => item.email === email && verifyPassword(password, item.password))
 
-  assert(user, 401, 'E-mail ou senha inválidos')
+  assert(user, 401, 'E-mail ou senha invalidos')
 
   return {
     user: sanitizeUser(user),
@@ -55,10 +57,17 @@ export function loginUser(input: Record<string, unknown>) {
 
 export function createDemoToken(role: UserRole) {
   const user = store.users.find((item) => item.role === role)
-  assert(user, 404, 'Usuário demonstrativo não encontrado')
+  assert(user, 404, 'Usuario demonstrativo nao encontrado')
 
   return {
     user: sanitizeUser(user),
     token: signToken({ userId: user.id, role: user.role }),
+  }
+}
+
+export function checkEmailAvailability(email: string) {
+  return {
+    email,
+    available: !store.users.some((user) => user.email === email),
   }
 }

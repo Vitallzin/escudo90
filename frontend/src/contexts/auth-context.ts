@@ -3,12 +3,13 @@ import { createContext } from 'react'
 export type User = {
   name: string
   email: string
-  role: 'client' | 'admin'
+  role: 'customer' | 'admin'
 }
 
 export type AuthContextData = {
   user: User | null
   isAuthenticated: boolean
+  authenticate: (user: User) => void
   login: () => void
   logout: () => void
 }

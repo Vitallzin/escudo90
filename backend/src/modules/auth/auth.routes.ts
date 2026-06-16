@@ -1,7 +1,14 @@
 import type { RouteDefinition } from '../../types.ts'
 import { assert } from '../../utils/api-error.ts'
 import { asRecord } from '../../utils/http.ts'
-import { createDemoToken, loginUser, registerUser, sanitizeUser } from './auth.service.ts'
+import {
+  checkEmailAvailability,
+  createDemoToken,
+  loginUser,
+  registerUser,
+  sanitizeUser,
+} from './auth.service.ts'
+import { getEmailFromQuery } from './auth.validators.ts'
 
 export const authRoutes: RouteDefinition[] = [
   {
@@ -19,12 +26,17 @@ export const authRoutes: RouteDefinition[] = [
     path: '/auth/recover-password',
     handler: ({ body }) => {
       const email = String(asRecord(body).email ?? '').trim()
-      assert(email.includes('@'), 422, 'Informe um e-mail válido')
+      assert(email.includes('@'), 422, 'Informe um e-mail valido')
 
       return {
-        message: 'Se o e-mail existir, enviaremos as instruções de recuperação.',
+        message: 'Se o e-mail existir, enviaremos as instrucoes de recuperacao.',
       }
     },
+  },
+  {
+    method: 'GET',
+    path: '/auth/check-email',
+    handler: ({ url }) => checkEmailAvailability(getEmailFromQuery(url.searchParams.get('email'))),
   },
   {
     method: 'GET',

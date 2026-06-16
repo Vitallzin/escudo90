@@ -8,8 +8,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({
       name: 'Marcos Oliveira',
       email: 'marcos@email.com',
-      role: 'client',
+      role: 'customer',
     })
+  }
+
+  function authenticate(nextUser: User) {
+    setUser(nextUser)
   }
 
   function logout() {
@@ -17,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext value={{ user, isAuthenticated: !!user, authenticate, login, logout }}>
       {children}
     </AuthContext>
   )

@@ -1,0 +1,81 @@
+.register-page {
+  padding-top: 34px;
+}
+
+.register-hero {
+  align-items: center;
+  display: grid;
+  gap: 34px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1fr);
+}
+
+.register-copy {
+  background:
+    linear-gradient(135deg, rgba(7, 27, 61, 0.96), rgba(13, 71, 161, 0.9)),
+    var(--blue-950);
+  border-radius: 16px;
+  color: var(--white);
+  min-height: 100%;
+  padding: 44px;
+}
+
+.register-copy h1 {
+  font-size: clamp(2.3rem, 5vw, 4.8rem);
+  line-height: 0.98;
+  margin-bottom: 22px;
+}
+
+.register-copy p {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  max-width: 620px;
+}
+
+.register-benefits {
+  display: grid;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.register-benefits article,
+.register-badge {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.register-benefits article {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 800;
+  padding: 14px;
+}
+
+.register-benefits svg,
+.register-badge svg {
+  color: var(--gold);
+  flex: 0 0 auto;
+  height: 22px;
+  width: 22px;
+}
+
+.register-badge {
+  color: var(--gold-soft);
+  font-weight: 900;
+  margin-top: 28px;
+}
+
+@media (max-width: 1040px) {
+  .register-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .register-copy {
+    padding: 26px;
+  }
+}

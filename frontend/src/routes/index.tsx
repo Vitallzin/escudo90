@@ -6,6 +6,7 @@ import { HomePage } from '../pages/HomePage'
 import { ProductDetailsPage } from '../pages/ProductDetailsPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { PromotionsPage } from '../pages/PromotionsPage'
+import { RegisterPage } from '../pages/RegisterPage'
 import { SelectionsPage } from '../pages/SelectionsPage'
 import { TeamsPage } from '../pages/TeamsPage'
 import { ScrollToTop } from './ScrollToTop'
@@ -20,6 +21,7 @@ export function AppRoutes() {
         <Route path="/times" element={<TeamsPage />} />
         <Route path="/selecoes" element={<SelectionsPage />} />
         <Route path="/promocoes" element={<PromotionsPage />} />
+        <Route path="/cadastro" element={<RegisterPage />} />
         <Route path="/produto/:id" element={<ProductDetailsPage />} />
         <Route path="/carrinho" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
