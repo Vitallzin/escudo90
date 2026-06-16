@@ -1,27 +1,50 @@
-import { createClient } from '@supabase/supabase-js'
+import { createRequire } from 'node:module'
 import { env } from './env.ts'
 
-if (!env.supabaseUrl || !env.supabaseAnonKey) {
-  console.warn(
-    'WARNING: SUPABASE_URL or SUPABASE_ANON_KEY is not defined in the environment variables.\n' +
-    'Please verify your .env file.'
-  )
+type SupabaseClientOptions = {
+  auth?: {
+    persistSession?: boolean
+    autoRefreshToken?: boolean
+  }
 }
 
-// Cliente público/padrão (Anon Key)
-// Usado para a grande maioria das operações com RLS habilitado.
-export const supabase = createClient(
-  env.supabaseUrl || 'https://placeholder.supabase.co',
-  env.supabaseAnonKey || 'placeholder-anon-key'
-)
+type SupabaseModule = {
+  createClient: (url: string, key: string, options?: SupabaseClientOptions) => unknown
+}
 
-// Cliente administrativo (Service Role Key)
-// ATENÇÃO: Ignora as regras do RLS. Use com extrema cautela apenas no backend para tarefas administrativas.
-export const supabaseAdmin = env.supabaseServiceKey
-  ? createClient(env.supabaseUrl, env.supabaseServiceKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    })
+function loadSupabaseModule() {
+  const require = createRequire(import.meta.url)
+
+  try {
+    return require('@supabase/supabase-js') as SupabaseModule
+  } catch {
+    throw new Error('Instale @supabase/supabase-js com npm install antes de usar o Supabase')
+  }
+}
+
+function requireSupabaseConfig() {
+  if (!env.supabaseUrl || !env.supabaseAnonKey) {
+    throw new Error('Configure SUPABASE_URL e SUPABASE_ANON_KEY antes de usar o Supabase')
+  }
+
+  return {
+    url: env.supabaseUrl,
+    anonKey: env.supabaseAnonKey,
+    serviceKey: env.supabaseServiceKey,
+  }
+}
+
+const { createClient } = loadSupabaseModule()
+const supabaseConfig = requireSupabaseConfig()
+const clientOptions = {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+}
+
+export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey, clientOptions)
+
+export const supabaseAdmin = supabaseConfig.serviceKey
+  ? createClient(supabaseConfig.url, supabaseConfig.serviceKey, clientOptions)
   : null
