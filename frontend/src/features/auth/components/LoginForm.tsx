@@ -1,6 +1,6 @@
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { AuthService, type LoginPayload } from '../../../services/authService'
 import './LoginForm.css'
@@ -12,6 +12,7 @@ const initialForm: LoginPayload = {
 
 export function LoginForm() {
   const { authenticate } = useAuth()
+  const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [showPassword, setShowPassword] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
@@ -29,13 +30,17 @@ export function LoginForm() {
     try {
       const result = await AuthService.login(form)
       authenticate({
-        name: result.user.name,
-        email: result.user.email,
-        role: result.user.role,
+        user: {
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role,
+        },
+        token: result.token,
       })
       setStatus('success')
       setMessage('Entrada realizada com sucesso.')
       setForm(initialForm)
+      navigate('/')
     } catch (error) {
       setStatus('idle')
       setMessage(error instanceof Error ? error.message : 'Nao foi possivel entrar')
