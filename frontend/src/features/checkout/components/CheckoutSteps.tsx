@@ -10,6 +10,7 @@ export function CheckoutSteps({ steps, currentStep, onSelectStep }: CheckoutStep
       {steps.map((item, index) => (
         <button
           className={`checkout-step ${index <= currentStep ? 'active' : ''}`}
+          disabled={index > currentStep}
           key={item}
           onClick={() => onSelectStep(index)}
         >

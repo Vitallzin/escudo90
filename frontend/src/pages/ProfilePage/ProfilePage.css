@@ -723,6 +723,21 @@
   padding: 0 14px;
 }
 
+.address-field-hint,
+.address-field-error {
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.address-field-hint {
+  color: var(--gray-500);
+}
+
+.address-field-error {
+  color: var(--danger);
+}
+
 @media (max-width: 980px) {
   .account-topbar,
   .account-access {

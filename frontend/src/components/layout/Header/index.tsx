@@ -146,7 +146,7 @@ export function Header() {
             {isAuthenticated && totalFavorites > 0 && <strong key={totalFavorites}>{totalFavorites}</strong>}
           </NavLink>
 
-          <NavLink className="cart-action" to="/carrinho" aria-label="Abrir carrinho">
+          <NavLink className="cart-action" to="/carrinho#carrinho" aria-label="Abrir carrinho">
             <ShoppingBag aria-hidden="true" />
             <span>Carrinho</span>
             {isAuthenticated && totalCount > 0 && <strong>{totalCount}</strong>}

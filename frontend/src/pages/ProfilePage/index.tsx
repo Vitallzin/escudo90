@@ -12,8 +12,9 @@ import {
   Trash2,
   SlidersHorizontal,
   UserRound,
+  Pencil,
 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Footer } from '../../components/layout/Footer'
 import { Header } from '../../components/layout/Header'
@@ -32,9 +33,31 @@ const menuItems = [
   { id: 'preferencias', label: 'Preferências', icon: SlidersHorizontal },
 ]
 
+type ViaCepResponse = {
+  erro?: boolean
+  logradouro?: string
+  bairro?: string
+  localidade?: string
+  uf?: string
+}
+
+function getZipCodeDigits(value: string) {
+  return value.replace(/\D/g, '').slice(0, 8)
+}
+
+function formatZipCode(value: string) {
+  const digits = getZipCodeDigits(value)
+
+  if (digits.length <= 5) {
+    return digits
+  }
+
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`
+}
+
 export function ProfilePage() {
   const { user, token, isAuthenticated, authenticate, logout } = useAuth()
-  const { addresses, addAddress, removeAddress, setPrimaryAddress } = useAddresses()
+  const { addresses, addAddress, removeAddress, setPrimaryAddress, updateAddress } = useAddresses()
   const [activeSection, setActiveSection] = useState('dados')
   const [canEditProfile, setCanEditProfile] = useState(false)
   const [name, setName] = useState(user?.name ?? '')
@@ -52,9 +75,68 @@ export function ProfilePage() {
   const [trustedDeviceEnabled, setTrustedDeviceEnabled] = useState(true)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
   const [addressDraft, setAddressDraft] = useState<AddressDraft>(emptyAddressDraft)
+  const [zipCodeError, setZipCodeError] = useState('')
+  const [isLoadingZipCode, setIsLoadingZipCode] = useState(false)
   const [addressToRemove, setAddressToRemove] = useState<Address | null>(null)
   const [saveMessage, setSaveMessage] = useState('')
+
+  useEffect(() => {
+    if (!isAddingAddress) {
+      return
+    }
+
+    const zipCode = getZipCodeDigits(addressDraft.zipCode)
+
+    if (zipCode.length < 8) {
+      return
+    }
+
+    const controller = new AbortController()
+
+    async function loadAddressFromZipCode() {
+      try {
+        setIsLoadingZipCode(true)
+        setZipCodeError('')
+
+        const response = await fetch(`https://viacep.com.br/ws/${zipCode}/json/`, {
+          signal: controller.signal,
+        })
+        const address = (await response.json()) as ViaCepResponse
+
+        if (!response.ok || address.erro) {
+          setZipCodeError('CEP nao encontrado. Confira o numero informado.')
+          return
+        }
+
+        setAddressDraft((currentDraft) => ({
+          ...currentDraft,
+          street: address.logradouro ?? currentDraft.street,
+          district: address.bairro ?? currentDraft.district,
+          city: address.localidade ?? currentDraft.city,
+          state: address.uf ?? currentDraft.state,
+        }))
+      } catch {
+        if (!controller.signal.aborted) {
+          setZipCodeError('Nao foi possivel validar este CEP agora. Tente novamente.')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingZipCode(false)
+        }
+      }
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadAddressFromZipCode()
+    }, 250)
+
+    return () => {
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [addressDraft.zipCode, isAddingAddress])
 
   function handleSaveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -110,20 +192,72 @@ export function ProfilePage() {
   }
 
   function updateAddressDraft(field: keyof AddressDraft, value: string) {
+    if (field === 'zipCode') {
+      setZipCodeError('')
+      setIsLoadingZipCode(false)
+    }
+
     setAddressDraft((currentDraft) => ({
       ...currentDraft,
-      [field]: field === 'state' ? value.toUpperCase().slice(0, 2) : value,
+      [field]: field === 'state' ? value.toUpperCase().slice(0, 2) : field === 'zipCode' ? formatZipCode(value) : value,
     }))
   }
 
-  function handleAddAddress(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    addAddress({
-      ...addressDraft,
-      isPrimary: addresses.length === 0,
-    })
+  function resetAddressForm() {
     setAddressDraft(emptyAddressDraft)
+    setEditingAddressId(null)
     setIsAddingAddress(false)
+    setZipCodeError('')
+    setIsLoadingZipCode(false)
+  }
+
+  function startNewAddress() {
+    setAddressDraft(emptyAddressDraft)
+    setEditingAddressId(null)
+    setZipCodeError('')
+    setIsLoadingZipCode(false)
+    setIsAddingAddress(true)
+  }
+
+  function startEditAddress(address: Address) {
+    setAddressDraft({
+      label: address.label,
+      zipCode: address.zipCode,
+      street: address.street,
+      number: address.number,
+      complement: address.complement,
+      district: address.district,
+      city: address.city,
+      state: address.state,
+    })
+    setEditingAddressId(address.id)
+    setZipCodeError('')
+    setIsLoadingZipCode(false)
+    setIsAddingAddress(true)
+  }
+
+  function handleSaveAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (getZipCodeDigits(addressDraft.zipCode).length !== 8) {
+      setZipCodeError('Informe um CEP valido com 8 digitos.')
+      return
+    }
+
+    if (isLoadingZipCode || zipCodeError) {
+      return
+    }
+
+    if (editingAddressId) {
+      updateAddress(editingAddressId, addressDraft)
+    } else {
+      addAddress({
+        ...addressDraft,
+        isPrimary: addresses.length === 0,
+      })
+    }
+
+    resetAddressForm()
   }
 
   function confirmRemoveAddress() {
@@ -443,7 +577,7 @@ export function ProfilePage() {
                       <MapPin aria-hidden="true" />
                       <h3>Nenhum endereço salvo ainda</h3>
                       <p>Adicione um endereço agora para deixar a entrega mais rápida no checkout.</p>
-                      <Button onClick={() => setIsAddingAddress(true)}>
+                      <Button onClick={startNewAddress}>
                         <Plus aria-hidden="true" />
                         Adicionar endereço
                       </Button>
@@ -457,7 +591,7 @@ export function ProfilePage() {
                           <strong>{addresses.length} endereço{addresses.length > 1 ? 's' : ''} salvo{addresses.length > 1 ? 's' : ''}</strong>
                           <span>O endereço principal será selecionado automaticamente na entrega.</span>
                         </div>
-                        <Button onClick={() => setIsAddingAddress(true)}>
+                        <Button onClick={startNewAddress}>
                           <Plus aria-hidden="true" />
                           Novo endereço
                         </Button>
@@ -488,6 +622,10 @@ export function ProfilePage() {
                             {address.complement && <p>{address.complement}</p>}
 
                             <div className="address-card__actions">
+                              <button onClick={() => startEditAddress(address)} type="button">
+                                <Pencil aria-hidden="true" />
+                                Editar
+                              </button>
                               {!address.isPrimary && (
                                 <button onClick={() => setPrimaryAddress(address.id)} type="button">
                                   Tornar principal
@@ -505,10 +643,10 @@ export function ProfilePage() {
                   )}
 
                   {isAddingAddress && (
-                    <form className="address-form settings-step" onSubmit={handleAddAddress}>
+                    <form className="address-form settings-step" onSubmit={handleSaveAddress}>
                       <div className="address-form__header">
                         <div>
-                          <h3>Novo endereço</h3>
+                          <h3>{editingAddressId ? 'Editar endereço' : 'Novo endereço'}</h3>
                           <p>Use um nome fácil de reconhecer, como Casa, Trabalho ou Presente.</p>
                         </div>
                       </div>
@@ -532,6 +670,8 @@ export function ProfilePage() {
                           required
                           value={addressDraft.zipCode}
                         />
+                        {isLoadingZipCode && <small className="address-field-hint">Buscando endereÃ§o...</small>}
+                        {zipCodeError && <small className="address-field-error">{zipCodeError}</small>}
                       </label>
 
                       <label>
@@ -594,13 +734,10 @@ export function ProfilePage() {
                       </label>
 
                       <div className="settings-actions">
-                        <Button type="submit">Salvar endereço</Button>
+                        <Button type="submit">{editingAddressId ? 'Salvar alterações' : 'Salvar endereço'}</Button>
                         <Button
                           variant="ghost"
-                          onClick={() => {
-                            setIsAddingAddress(false)
-                            setAddressDraft(emptyAddressDraft)
-                          }}
+                          onClick={resetAddressForm}
                         >
                           Cancelar
                         </Button>
@@ -714,3 +851,4 @@ function getInitials(name: string) {
     .map((part) => part[0]?.toUpperCase())
     .join('')
 }
+

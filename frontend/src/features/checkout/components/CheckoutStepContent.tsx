@@ -1,7 +1,19 @@
-import { MapPin, Plus } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { CreditCard, MapPin, Plus, ShieldCheck } from 'lucide-react'
 import { Button } from '../../../components/ui/Button'
 import type { Address, AddressDraft } from '../../../types/address'
+import { formatCurrency } from '../../../utils/formatCurrency'
+
+const paymentBrands = [
+  { id: 'visa', label: 'Visa' },
+  { id: 'mastercard', label: 'Mastercard' },
+  { id: 'elo', label: 'Elo' },
+  { id: 'amex', label: 'American Express' },
+]
+
+const paymentMethods = [
+  { id: 'pix', label: 'Pix' },
+  { id: 'card', label: 'Cartao de credito' },
+]
 
 type CheckoutStepContentProps = {
   step: number
@@ -12,11 +24,37 @@ type CheckoutStepContentProps = {
   saveAsPrimary: boolean
   isAddingAddress: boolean
   deliveryError: string
+  zipCodeError: string
+  isLoadingZipCode: boolean
+  paymentError: string
+  selectedPaymentMethod: string
+  selectedPaymentBrand: string
+  selectedShipping: string
+  reviewAddress: AddressDraft | null
+  subtotal: number
+  coupon: number
+  shipping: number
+  total: number
   onSelectAddress: (addressId: string) => void
   onAddNewAddress: () => void
   onAddressDraftChange: (field: keyof AddressDraft, value: string) => void
   onSaveAddressChange: (checked: boolean) => void
   onSaveAsPrimaryChange: (checked: boolean) => void
+  onSelectPaymentMethod: (method: string) => void
+  onSelectPaymentBrand: (brand: string) => void
+  onSelectShipping: (shipping: string) => void
+}
+
+function getPaymentBrandLabel(brand: string) {
+  return paymentBrands.find((paymentBrand) => paymentBrand.id === brand)?.label ?? 'Nao selecionada'
+}
+
+function formatAddress(address: AddressDraft | null) {
+  if (!address) {
+    return 'Endereco nao informado'
+  }
+
+  return `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}`
 }
 
 export function CheckoutStepContent({
@@ -28,39 +66,27 @@ export function CheckoutStepContent({
   saveAsPrimary,
   isAddingAddress,
   deliveryError,
+  zipCodeError,
+  isLoadingZipCode,
+  paymentError,
+  selectedPaymentMethod,
+  selectedPaymentBrand,
+  selectedShipping,
+  reviewAddress,
+  subtotal,
+  coupon,
+  shipping,
+  total,
   onSelectAddress,
   onAddNewAddress,
   onAddressDraftChange,
   onSaveAddressChange,
   onSaveAsPrimaryChange,
+  onSelectPaymentMethod,
+  onSelectPaymentBrand,
+  onSelectShipping,
 }: CheckoutStepContentProps) {
   if (step === 0) {
-    return (
-      <fieldset>
-        <legend>Dados pessoais</legend>
-        <div className="form-grid">
-          <label>
-            Nome completo
-            <input placeholder="Joao Silva" />
-          </label>
-          <label>
-            CPF
-            <input placeholder="000.000.000-00" />
-          </label>
-          <label>
-            E-mail
-            <input placeholder="joao@email.com" />
-          </label>
-          <label>
-            Telefone
-            <input placeholder="(11) 99999-9999" />
-          </label>
-        </div>
-      </fieldset>
-    )
-  }
-
-  if (step === 1) {
     return (
       <fieldset>
         <legend>Entrega</legend>
@@ -69,12 +95,12 @@ export function CheckoutStepContent({
           <div className="checkout-address-empty">
             <MapPin aria-hidden="true" />
             <div>
-              <strong>Não há endereço salvo</strong>
-              <span>Adicione um endereço para calcular o frete e continuar a compra.</span>
+              <strong>Nao ha endereco salvo</strong>
+              <span>Adicione um endereco para calcular o frete e continuar a compra.</span>
             </div>
             <Button onClick={onAddNewAddress}>
               <Plus aria-hidden="true" />
-              Adicionar endereço
+              Adicionar endereco
             </Button>
           </div>
         )}
@@ -84,11 +110,11 @@ export function CheckoutStepContent({
             <div className="checkout-address-heading">
               <div>
                 <strong>Escolha onde receber</strong>
-                <span>O principal já vem selecionado, mas você pode trocar para esta compra.</span>
+                <span>O principal ja vem selecionado, mas voce pode trocar para esta compra.</span>
               </div>
               <Button variant="ghost" onClick={onAddNewAddress}>
                 <Plus aria-hidden="true" />
-                Novo endereço
+                Novo endereco
               </Button>
             </div>
 
@@ -129,14 +155,14 @@ export function CheckoutStepContent({
             <div className="checkout-address-form__title">
               <MapPin aria-hidden="true" />
               <div>
-                <strong>Novo endereço de entrega</strong>
-                <span>Use um nome fácil para reconhecer este endereço depois.</span>
+                <strong>Novo endereco de entrega</strong>
+                <span>Use um nome facil para reconhecer este endereco depois.</span>
               </div>
             </div>
 
             <div className="form-grid">
               <label>
-                Nome do endereço
+                Nome do endereco
                 <input
                   onChange={(event) => onAddressDraftChange('label', event.target.value)}
                   placeholder="Casa, trabalho, presente..."
@@ -151,6 +177,8 @@ export function CheckoutStepContent({
                   placeholder="00000-000"
                   value={addressDraft.zipCode}
                 />
+                {isLoadingZipCode && <small className="checkout-field-hint">Buscando endereco...</small>}
+                {zipCodeError && <small className="checkout-field-error">{zipCodeError}</small>}
               </label>
               <label className="span-2">
                 Rua ou avenida
@@ -161,7 +189,7 @@ export function CheckoutStepContent({
                 />
               </label>
               <label>
-                Número
+                Numero
                 <input
                   onChange={(event) => onAddressDraftChange('number', event.target.value)}
                   placeholder="123"
@@ -209,7 +237,7 @@ export function CheckoutStepContent({
                   onChange={(event) => onSaveAddressChange(event.target.checked)}
                   type="checkbox"
                 />
-                <span>Salvar endereço</span>
+                <span>Salvar endereco</span>
               </label>
               <label>
                 <input
@@ -217,7 +245,7 @@ export function CheckoutStepContent({
                   onChange={(event) => onSaveAsPrimaryChange(event.target.checked)}
                   type="checkbox"
                 />
-                <span>Salvar endereço como principal</span>
+                <span>Salvar endereco como principal</span>
               </label>
             </div>
           </div>
@@ -225,65 +253,138 @@ export function CheckoutStepContent({
 
         {deliveryError && <p className="checkout-error">{deliveryError}</p>}
 
-        <div className="shipping-options">
-          <label>
-            <input type="radio" defaultChecked />
-            <span>Expresso - 2 a 4 dias úteis</span>
-            <strong>Grátis</strong>
-          </label>
-          <label>
-            <input type="radio" />
-            <span>Retirada em ponto parceiro</span>
-            <strong>R$ 12,90</strong>
-          </label>
-        </div>
+        {(addresses.length > 0 || isAddingAddress) && (
+          <div className="shipping-options">
+            <label className={selectedShipping === 'express' ? 'selected' : undefined}>
+              <input
+                checked={selectedShipping === 'express'}
+                name="shipping"
+                onChange={() => onSelectShipping('express')}
+                type="radio"
+              />
+              <span>Expresso - 2 a 4 dias uteis</span>
+              <strong>Gratis</strong>
+            </label>
+            <label className={selectedShipping === 'pickup' ? 'selected' : undefined}>
+              <input
+                checked={selectedShipping === 'pickup'}
+                name="shipping"
+                onChange={() => onSelectShipping('pickup')}
+                type="radio"
+              />
+              <span>Retirada em ponto parceiro</span>
+              <strong>R$ 12,90</strong>
+            </label>
+          </div>
+        )}
       </fieldset>
     )
   }
 
-  if (step === 2) {
+  if (step === 1) {
     return (
       <fieldset>
         <legend>Pagamento</legend>
-        <div className="payment-grid">
-          <label className="payment-option selected">
-            <input type="radio" defaultChecked />
-            Cartão de crédito
-          </label>
-          <label className="payment-option">
-            <input type="radio" />
-            Pix com desconto
-          </label>
-          <label className="payment-option">
-            <input type="radio" />
-            Mercado Pago
-          </label>
+        <div className="payment-intro">
+          <CreditCard aria-hidden="true" />
+          <div>
+            <strong>Escolha como deseja pagar</strong>
+            <span>Os dados sensiveis serao preenchidos apenas no ambiente seguro do PagSeguro.</span>
+          </div>
         </div>
-        <div className="form-grid">
-          <label className="span-2">
-            Número do cartão
-            <input placeholder="0000 0000 0000 0000" />
-          </label>
-          <label>
-            Validade
-            <input placeholder="MM/AA" />
-          </label>
-          <label>
-            CVV
-            <input placeholder="123" />
-          </label>
+
+        <div className="payment-method-grid">
+          {paymentMethods.map((method) => (
+            <label
+              className={selectedPaymentMethod === method.id ? 'payment-option selected' : 'payment-option'}
+              key={method.id}
+            >
+              <input
+                checked={selectedPaymentMethod === method.id}
+                name="payment-method"
+                onChange={() => onSelectPaymentMethod(method.id)}
+                type="radio"
+              />
+              <span>{method.label}</span>
+            </label>
+          ))}
         </div>
+
+        {selectedPaymentMethod === 'card' && (
+          <>
+            <div className="payment-section-title">Bandeira do cartao</div>
+            <div className="payment-grid">
+              {paymentBrands.map((brand) => (
+                <label
+                  className={selectedPaymentBrand === brand.id ? 'payment-option selected' : 'payment-option'}
+                  key={brand.id}
+                >
+                  <input
+                    checked={selectedPaymentBrand === brand.id}
+                    name="payment-brand"
+                    onChange={() => onSelectPaymentBrand(brand.id)}
+                    type="radio"
+                  />
+                  <span>{brand.label}</span>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+
+        {paymentError && <p className="checkout-error">{paymentError}</p>}
       </fieldset>
     )
   }
 
   return (
     <div className="review-box">
-      <strong>Pedido pronto para confirmação</strong>
-      <p>Camisas separadas, cupom aplicado, frete grátis e pagamento protegido por antifraude.</p>
-      <Link to="/perfil">
-        <Button>Confirmar pedido</Button>
-      </Link>
+      <div className="review-box__title">
+        <ShieldCheck aria-hidden="true" />
+        <div>
+          <strong>Revise antes de finalizar</strong>
+          <span>Confira entrega, pagamento e valores do pedido.</span>
+        </div>
+      </div>
+
+      <div className="review-grid">
+        <section>
+          <h3>Entrega</h3>
+          <p>{reviewAddress?.label ?? 'Endereco da compra'}</p>
+          <span>{formatAddress(reviewAddress)}</span>
+          {reviewAddress && (
+            <span>
+              {reviewAddress.district} - {reviewAddress.city}/{reviewAddress.state}
+            </span>
+          )}
+        </section>
+
+        <section>
+          <h3>Pagamento</h3>
+          <p>{selectedPaymentMethod === 'pix' ? 'Pix' : 'Cartao de credito'}</p>
+          {selectedPaymentMethod === 'card' && <span>Bandeira: {getPaymentBrandLabel(selectedPaymentBrand)}</span>}
+          <span>Processamento via PagSeguro</span>
+        </section>
+      </div>
+
+      <div className="review-values">
+        <div>
+          <span>Produtos</span>
+          <strong>{formatCurrency(subtotal)}</strong>
+        </div>
+        <div>
+          <span>Cupom</span>
+          <strong>- {formatCurrency(coupon)}</strong>
+        </div>
+        <div>
+          <span>Frete</span>
+          <strong>{shipping > 0 ? formatCurrency(shipping) : 'Gratis'}</strong>
+        </div>
+        <div className="review-values__total">
+          <span>Total</span>
+          <strong>{formatCurrency(total)}</strong>
+        </div>
+      </div>
     </div>
   )
 }
