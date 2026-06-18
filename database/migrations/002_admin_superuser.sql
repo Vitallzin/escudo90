@@ -38,9 +38,19 @@ CREATE TABLE IF NOT EXISTS catalogs (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER trg_catalogs_updated_at
-  BEFORE UPDATE ON catalogs
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgname = 'trg_catalogs_updated_at'
+      AND tgrelid = 'catalogs'::regclass
+  ) THEN
+    CREATE TRIGGER trg_catalogs_updated_at
+      BEFORE UPDATE ON catalogs
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS catalog_products (
   catalog_id UUID NOT NULL REFERENCES catalogs(id) ON DELETE CASCADE,
@@ -105,9 +115,19 @@ CREATE TABLE IF NOT EXISTS promotions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER trg_promotions_updated_at
-  BEFORE UPDATE ON promotions
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgname = 'trg_promotions_updated_at'
+      AND tgrelid = 'promotions'::regclass
+  ) THEN
+    CREATE TRIGGER trg_promotions_updated_at
+      BEFORE UPDATE ON promotions
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS promotion_products (
   promotion_id UUID NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,
@@ -128,9 +148,19 @@ CREATE TABLE IF NOT EXISTS price_rules (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER trg_price_rules_updated_at
-  BEFORE UPDATE ON price_rules
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgname = 'trg_price_rules_updated_at'
+      AND tgrelid = 'price_rules'::regclass
+  ) THEN
+    CREATE TRIGGER trg_price_rules_updated_at
+      BEFORE UPDATE ON price_rules
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+  END IF;
+END $$;
 
 ALTER TABLE coupons
   ADD COLUMN IF NOT EXISTS max_uses_per_user INTEGER,
@@ -212,9 +242,19 @@ CREATE TABLE IF NOT EXISTS site_content_blocks (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER trg_site_content_blocks_updated_at
-  BEFORE UPDATE ON site_content_blocks
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgname = 'trg_site_content_blocks_updated_at'
+      AND tgrelid = 'site_content_blocks'::regclass
+  ) THEN
+    CREATE TRIGGER trg_site_content_blocks_updated_at
+      BEFORE UPDATE ON site_content_blocks
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS system_settings (
   key VARCHAR(120) PRIMARY KEY,
