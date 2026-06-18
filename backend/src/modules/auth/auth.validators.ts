@@ -37,12 +37,13 @@ function validatePassword(password: string) {
   const hasLowercase = /[a-z]/.test(password)
   const hasUppercase = /[A-Z]/.test(password)
   const hasNumber = /\d/.test(password)
+  const hasSymbol = /[^A-Za-z0-9]/.test(password)
 
-  assert(password.length >= 8, 422, 'A senha deve ter pelo menos 8 caracteres')
+  assert(password.length >= 12, 422, 'A senha deve ter pelo menos 12 caracteres')
   assert(
-    hasLowercase && hasUppercase && hasNumber,
+    hasLowercase && hasUppercase && hasNumber && hasSymbol,
     422,
-    'A senha deve conter letra maiuscula, minuscula e numero',
+    'A senha deve conter letra maiuscula, minuscula, numero e simbolo',
   )
 }
 

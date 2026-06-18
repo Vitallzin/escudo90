@@ -6,11 +6,41 @@ import { assert } from '../../utils/api-error.ts'
 import { createId } from '../../utils/id.ts'
 import { parseLoginInput, parseRegisterInput } from './auth.validators.ts'
 
+const MAX_LOGIN_ATTEMPTS = 5
+const LOCKOUT_MINUTES = 30
+const failedLoginAttempts = new Map<string, { count: number; lockedUntil?: number }>()
+
 export function sanitizeUser(user: User) {
   const { password, ...safeUser } = user
   void password
 
   return safeUser
+}
+
+function assertLoginIsAllowed(email: string) {
+  const attempt = failedLoginAttempts.get(email)
+
+  if (!attempt?.lockedUntil) {
+    return
+  }
+
+  if (Date.now() >= attempt.lockedUntil) {
+    failedLoginAttempts.delete(email)
+    return
+  }
+
+  assert(false, 429, `Login bloqueado temporariamente. Tente novamente em ${LOCKOUT_MINUTES} minutos.`)
+}
+
+function recordFailedLogin(email: string) {
+  const current = failedLoginAttempts.get(email)
+  const nextCount = (current?.count ?? 0) + 1
+  const lockedUntil = nextCount >= MAX_LOGIN_ATTEMPTS ? Date.now() + LOCKOUT_MINUTES * 60 * 1000 : undefined
+
+  failedLoginAttempts.set(email, {
+    count: nextCount,
+    lockedUntil,
+  })
 }
 
 export function registerUser(input: Record<string, unknown>) {
@@ -45,9 +75,16 @@ export function registerUser(input: Record<string, unknown>) {
 
 export function loginUser(input: Record<string, unknown>) {
   const { email, password } = parseLoginInput(input)
+  assertLoginIsAllowed(email)
+
   const user = store.users.find((item) => item.email === email && verifyPassword(password, item.password))
 
-  assert(user, 401, 'E-mail ou senha invalidos')
+  if (!user) {
+    recordFailedLogin(email)
+    assert(false, 401, 'E-mail ou senha invalidos')
+  }
+
+  failedLoginAttempts.delete(email)
 
   return {
     user: sanitizeUser(user),
