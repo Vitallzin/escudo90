@@ -55,16 +55,18 @@ export function RegisterForm() {
           name: result.user.name,
           email: result.user.email,
           role: result.user.role,
+          phone: result.user.phone,
+          document: result.user.document,
         },
         token: result.token,
       })
       setStatus('success')
-      setMessage('Cadastro criado com sucesso. Sua conta ja esta ativa para comprar.')
+      setMessage('Cadastro criado com sucesso. Sua conta já está ativa para comprar.')
       setForm(initialForm)
       navigate('/')
     } catch (error) {
       setStatus('idle')
-      setMessage(error instanceof Error ? error.message : 'Nao foi possivel criar sua conta')
+      setMessage(error instanceof Error ? error.message : 'Não foi possível criar sua conta')
     }
   }
 
@@ -142,7 +144,7 @@ export function RegisterForm() {
               autoComplete="new-password"
               name="password"
               onChange={(event) => updateField('password', event.target.value)}
-              placeholder="Minimo 8 caracteres"
+              placeholder="Mínimo 8 caracteres"
               required
               type={showPassword ? 'text' : 'password'}
               value={form.password}
@@ -175,7 +177,7 @@ export function RegisterForm() {
         </label>
       </div>
 
-      <div className="password-meter" aria-label="Forca da senha">
+      <div className="password-meter" aria-label="Força da senha">
         {[0, 1, 2, 3].map((item) => (
           <span key={item} className={item < passwordStrength ? 'active' : undefined} />
         ))}
@@ -189,7 +191,7 @@ export function RegisterForm() {
           required
           type="checkbox"
         />
-        <span>Aceito os termos da loja, politica de privacidade e comunicacoes sobre meu pedido.</span>
+        <span>Aceito os termos da loja, política de privacidade e comunicações sobre meu pedido.</span>
       </label>
 
       {message && <p className={status === 'success' ? 'register-message success' : 'register-message'}>{message}</p>}

@@ -64,6 +64,10 @@ export type CartItem = {
   quantity: number
 }
 
+export type UserCartItem = CartItem & {
+  userId: string
+}
+
 export type OrderStatus =
   | 'pending_payment'
   | 'paid'
@@ -126,6 +130,7 @@ export type AppStore = {
   payments: Payment[]
   coupons: Coupon[]
   reviews: Review[]
+  cartItems: UserCartItem[]
 }
 
 export type RequestContext = {

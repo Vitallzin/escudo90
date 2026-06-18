@@ -84,7 +84,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <AuthRequiredNotice
           compact
           message="Para salvar camisas na sua lista de desejos, entre na sua conta."
-          title="Login necessario"
+          title="Login necessário"
         />
       )}
     </article>

@@ -42,13 +42,13 @@ async function request<TResponse>(path: string, options: RequestInit) {
       ...options,
     })
   } catch {
-    throw new Error('Nao foi possivel conectar ao servidor. Verifique se o backend esta rodando.')
+    throw new Error('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
   }
 
   const payload = (await response.json()) as { data?: TResponse; error?: { message?: string } }
 
   if (!response.ok) {
-    throw new Error(payload.error?.message ?? 'Nao foi possivel concluir a solicitacao')
+    throw new Error(payload.error?.message ?? 'Não foi possível concluir a solicitação')
   }
 
   if (!payload.data) {

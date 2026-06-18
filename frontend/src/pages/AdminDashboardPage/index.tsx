@@ -4,7 +4,7 @@ import { DashboardMetrics } from '../../features/dashboard'
 import './AdminDashboardPage.css'
 
 const adminRows = [
-  ['Brasil Retro 1970', '18 un.', 'R$ 18.844', 'Ativo'],
+  ['Brasil Retrô 1970', '18 un.', 'R$ 18.844', 'Ativo'],
   ['Boca Juniors Home', '11 un.', 'R$ 11.516', 'Estoque baixo'],
   ['Milan Champions Night', '8 un.', 'R$ 9.998', 'Limitado'],
 ]

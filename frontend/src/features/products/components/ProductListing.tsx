@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { ProductService } from '../../../services/productService'
 import type { Product } from '../../../types/product'
 import { ProductCard } from './ProductCard'
+import './ProductListing.css'
 
 type ProductFilter = {
   label: string
@@ -69,10 +70,13 @@ export function ProductListing({
 
   return (
     <>
-      <section className="catalog-hero">
-        <span className="eyebrow">{eyebrow}</span>
-        <h1>{title}</h1>
-        <p>{description}</p>
+      <section className="catalog-heading">
+        <div>
+          <span className="eyebrow">{eyebrow}</span>
+          <h1>{title}</h1>
+          <p>{description}</p>
+        </div>
+        <span className="catalog-heading__count">{filteredProducts.length} modelos</span>
       </section>
 
       <section className="catalog-toolbar">

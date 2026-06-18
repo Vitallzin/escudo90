@@ -13,7 +13,7 @@ export function LoginPage() {
           <div className="login-copy">
             <span className="eyebrow">Entrar na conta</span>
             <h1>Acesse sua conta para continuar comprando.</h1>
-            <p>Use seu e-mail e senha cadastrados para acompanhar pedidos, enderecos e dados da sua conta.</p>
+            <p>Use seu e-mail e senha cadastrados para acompanhar pedidos, endereços e dados da sua conta.</p>
 
             <div className="login-trust">
               <article>

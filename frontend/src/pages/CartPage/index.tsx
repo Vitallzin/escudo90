@@ -52,10 +52,27 @@ export function CartPage() {
       <Header />
 
       <main>
-        <section className="page-title">
-          <span className="eyebrow">Carrinho persistente</span>
-          <h1>Revise seu pedido</h1>
-          <p>Produtos, tamanhos, quantidades, cupom, frete e total antes do checkout.</p>
+        <section className="cart-page-header">
+          <div>
+            <span className="eyebrow">Sua compra</span>
+            <h1>Carrinho e favoritos</h1>
+            <p>Revise seus produtos e transforme desejos em compra quando quiser.</p>
+          </div>
+
+          {isAuthenticated && (
+            <div className="cart-page-tabs" aria-label="Atalhos da página">
+              <a href="#carrinho">
+                <ShoppingBag aria-hidden="true" />
+                <span>Carrinho</span>
+                <strong>{items.length}</strong>
+              </a>
+              <a href="#favoritos">
+                <Heart aria-hidden="true" />
+                <span>Favoritos</span>
+                <strong>{favorites.length}</strong>
+              </a>
+            </div>
+          )}
         </section>
 
         {!isAuthenticated ? (
@@ -66,15 +83,15 @@ export function CartPage() {
         ) : (
           <>
             {items.length === 0 ? (
-              <section className="empty-state">
-                <h2>Seu carrinho esta vazio</h2>
+              <section className="empty-state" id="carrinho">
+                <h2>Seu carrinho está vazio</h2>
                 <p>Aproveite nossas ofertas e encontre seu manto favorito.</p>
                 <Link to="/times">
-                  <Button>Ir para o catalogo</Button>
+                  <Button>Ir para o catálogo</Button>
                 </Link>
               </section>
             ) : (
-              <section className="cart-layout">
+              <section className="cart-layout" id="carrinho">
                 <div className="cart-list">
                   {items.map((item) => (
                     <article className="cart-item" key={`${item.product.id}-${item.size}`}>
@@ -112,7 +129,7 @@ export function CartPage() {
               </section>
             )}
 
-            <section className="cart-favorites">
+            <section className="cart-favorites" id="favoritos">
               <div className="table-header">
                 <div>
                   <span className="eyebrow">Lista de desejos</span>
@@ -124,7 +141,7 @@ export function CartPage() {
               {favorites.length === 0 ? (
                 <div className="cart-favorites-empty">
                   <Heart aria-hidden="true" />
-                  <p>Seus favoritos aparecem aqui para voce colocar no carrinho rapidamente.</p>
+                  <p>Seus favoritos aparecem aqui para você colocar no carrinho rapidamente.</p>
                   <Link to="/times">Ver camisas</Link>
                 </div>
               ) : (
@@ -139,7 +156,7 @@ export function CartPage() {
                       </div>
                       <button onClick={() => addFavoriteToCart(product)} type="button">
                         <ShoppingBag aria-hidden="true" />
-                        <span>Por no carrinho</span>
+                        <span>Pôr no carrinho</span>
                       </button>
                       <button
                         aria-label={`Remover ${product.name} dos favoritos`}

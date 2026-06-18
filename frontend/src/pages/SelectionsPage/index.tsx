@@ -17,8 +17,8 @@ export function SelectionsPage() {
       <main>
         <ProductListing
           eyebrow="Camisas de seleções"
-          title="Seleções nacionais separadas dos clubes."
-          description="Veja camisas de seleções do mundo todo e filtre entre modelos atuais e versões retrô."
+          title="Camisas de seleções para torcer em grande estilo."
+          description="Veja modelos de seleções do mundo todo, dos lançamentos atuais às versões retrô mais marcantes."
           filters={filters}
           group="selections"
         />

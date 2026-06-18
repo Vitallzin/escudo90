@@ -2,6 +2,7 @@ import { createServer } from 'node:http'
 import { env } from './config/env.ts'
 import { adminRoutes } from './modules/admin/admin.routes.ts'
 import { authRoutes } from './modules/auth/auth.routes.ts'
+import { cartRoutes } from './modules/cart/cart.routes.ts'
 import { categoryRoutes } from './modules/categories/categories.routes.ts'
 import { couponRoutes } from './modules/coupons/coupons.routes.ts'
 import { favoriteRoutes } from './modules/favorites/favorites.routes.ts'
@@ -26,6 +27,7 @@ const routes: RouteDefinition[] = [
   ...categoryRoutes,
   ...productRoutes,
   ...favoriteRoutes,
+  ...cartRoutes,
   ...reviewRoutes,
   ...couponRoutes,
   ...shippingRoutes,
@@ -51,6 +53,7 @@ export function getHealthStatus() {
       'payments',
       'coupons',
       'favorites',
+      'cart',
       'reviews',
       'shipping',
       'admin',

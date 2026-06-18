@@ -34,6 +34,8 @@ export function LoginForm() {
           name: result.user.name,
           email: result.user.email,
           role: result.user.role,
+          phone: result.user.phone,
+          document: result.user.document,
         },
         token: result.token,
       })
@@ -43,7 +45,7 @@ export function LoginForm() {
       navigate('/')
     } catch (error) {
       setStatus('idle')
-      setMessage(error instanceof Error ? error.message : 'Nao foi possivel entrar')
+      setMessage(error instanceof Error ? error.message : 'Não foi possível entrar')
     }
   }
 
@@ -96,7 +98,7 @@ export function LoginForm() {
       </button>
 
       <p className="login-register-link">
-        Ainda nao tem conta? <Link to="/cadastro">Cadastre-se</Link>
+        Ainda não tem conta? <Link to="/cadastro">Cadastre-se</Link>
       </p>
     </form>
   )

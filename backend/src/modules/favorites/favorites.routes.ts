@@ -1,39 +1,26 @@
-import { store } from '../../database/store.ts'
 import type { RouteDefinition } from '../../types.ts'
-import { assert } from '../../utils/api-error.ts'
 import { sendNoContent } from '../../utils/http.ts'
+import { addFavorite, listFavorites, removeFavorite } from './favorites.service.ts'
 
 export const favoriteRoutes: RouteDefinition[] = [
   {
     method: 'GET',
     path: '/favorites',
     auth: true,
-    handler: ({ user }) =>
-      store.products.filter((product) => user!.favorites.includes(product.id)),
+    handler: ({ user }) => listFavorites(user!),
   },
   {
     method: 'POST',
     path: '/favorites/:productId',
     auth: true,
-    handler: ({ user, params }) => {
-      const product = store.products.find((item) => item.id === params.productId)
-      assert(product, 404, 'Produto não encontrado')
-
-      if (!user!.favorites.includes(product.id)) {
-        user!.favorites.push(product.id)
-      }
-
-      return {
-        favorites: user!.favorites,
-      }
-    },
+    handler: ({ user, params }) => addFavorite(user!, params.productId),
   },
   {
     method: 'DELETE',
     path: '/favorites/:productId',
     auth: true,
-    handler: ({ user, params, res }) => {
-      user!.favorites = user!.favorites.filter((id) => id !== params.productId)
+    handler: async ({ user, params, res }) => {
+      await removeFavorite(user!, params.productId)
       sendNoContent(res)
     },
   },

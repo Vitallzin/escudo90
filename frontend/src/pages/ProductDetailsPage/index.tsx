@@ -78,8 +78,8 @@ export function ProductDetailsPage() {
       <div className="app-shell">
         <Header />
         <main className="empty-state">
-          <h1>Produto nao encontrado</h1>
-          <Link to="/times">Voltar ao catalogo</Link>
+          <h1>Produto não encontrado</h1>
+          <Link to="/times">Voltar ao catálogo</Link>
         </main>
         <Footer />
       </div>
@@ -147,7 +147,7 @@ export function ProductDetailsPage() {
                 <Star aria-hidden="true" />
                 {product.rating}
               </strong>
-              <span>{product.reviews} avaliacoes verificadas</span>
+              <span>{product.reviews} avaliações verificadas</span>
               <span>{product.stock} em estoque</span>
             </div>
 
@@ -197,11 +197,11 @@ export function ProductDetailsPage() {
               </Button>
             </div>
 
-            {authNotice && <AuthRequiredNotice message={authNotice} title="Login necessario" />}
+            {authNotice && <AuthRequiredNotice message={authNotice} title="Login necessário" />}
 
             <div className="shipping-box">
               <strong>Frete e garantia</strong>
-              <span>Calcule o frete no carrinho. Troca facilitada em ate 7 dias.</span>
+              <span>Calcule o frete no carrinho. Troca facilitada em até 7 dias.</span>
             </div>
           </div>
         </section>
@@ -210,7 +210,7 @@ export function ProductDetailsPage() {
           <section className="related-products">
             <div className="section-header">
               <div>
-                <span className="eyebrow">Voce tambem pode gostar</span>
+                <span className="eyebrow">Você também pode gostar</span>
                 <h2>Produtos semelhantes</h2>
               </div>
               <Link to="/times">Ver mais camisas</Link>

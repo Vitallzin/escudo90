@@ -66,7 +66,7 @@ async function request<TData>(path: string) {
   const payload = (await response.json()) as ApiResponse<TData>
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel carregar os dados do catalogo')
+    throw new Error('Não foi possível carregar os dados do catálogo')
   }
 
   return payload.data
@@ -156,12 +156,20 @@ export const ProductService = {
     }
 
     if (filters.query) {
-      const lowQuery = filters.query.toLowerCase()
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(lowQuery) ||
-          product.description.toLowerCase().includes(lowQuery),
-      )
+      const query = normalizeSearch(filters.query)
+
+      if (!query) {
+        return []
+      }
+
+      filtered = filtered
+        .map((product) => ({
+          product,
+          score: getSearchScore(product, query),
+        }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score || b.product.reviews - a.product.reviews)
+        .map((item) => item.product)
     }
 
     return filtered
@@ -208,14 +216,56 @@ function normalizeFilter(value: string) {
     .replace(/\s+/g, '-')
 }
 
+function normalizeSearch(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function getSearchScore(product: Product, query: string) {
+  const searchableFields = [
+    product.name,
+    product.club,
+    product.league,
+    product.country,
+    product.category,
+    product.season,
+    product.description,
+  ]
+
+  return searchableFields.reduce((bestScore, field, index) => {
+    const normalizedField = normalizeSearch(field)
+    const words = normalizedField.split(/[\s-]+/).filter(Boolean)
+    const wordStartsWithQuery = words.some((word) => word.startsWith(query))
+    const fieldStartsWithQuery = normalizedField.startsWith(query)
+    const fieldIncludesQuery = normalizedField.includes(query)
+
+    let score = 0
+
+    if (fieldStartsWithQuery) score = 100
+    else if (wordStartsWithQuery) score = 80
+    else if (fieldIncludesQuery) score = 45
+
+    if (index <= 1 && score > 0) {
+      score += 20
+    }
+
+    return Math.max(bestScore, score)
+  }, 0)
+}
+
 function getCategoryName(categoryId: string) {
   const categoryById: Record<string, string> = {
-    cat_brasileirao: 'Brasileirao',
+    cat_brasileirao: 'Brasileirão',
     cat_premier: 'Premier League',
     cat_laliga: 'La Liga',
     cat_champions: 'Champions League',
-    cat_selecoes: 'Selecoes',
-    cat_retro: 'Retro',
+    cat_selecoes: 'Seleções',
+    cat_retro: 'Retrô',
   }
 
   return categoryById[categoryId] ?? categoryId.replace('cat_', '')

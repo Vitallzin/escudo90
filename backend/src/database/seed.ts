@@ -226,6 +226,7 @@ export const seedStore: AppStore = {
       createdAt: now,
     },
   ],
+  cartItems: [],
   orders: [],
   payments: [],
 }

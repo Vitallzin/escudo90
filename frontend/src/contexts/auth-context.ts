@@ -4,6 +4,8 @@ export type User = {
   name: string
   email: string
   role: 'customer' | 'admin'
+  phone?: string
+  document?: string
 }
 
 export type AuthSession = {

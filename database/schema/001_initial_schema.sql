@@ -172,7 +172,29 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id);
 
 -- ============================================================
--- 9. COUPONS
+-- 9. USER_CART_ITEMS
+-- Carrinho persistente por usuario antes da compra
+-- Rotas: GET /cart, POST /cart/items, DELETE /cart/items/:productId/:size, DELETE /cart
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_cart_items (
+  user_id     VARCHAR(50)   NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id  VARCHAR(100)  NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  size        VARCHAR(10)   NOT NULL,
+  quantity    INTEGER       NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ   NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, product_id, size)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_cart_items_user_id ON user_cart_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_cart_items_product_id ON user_cart_items(product_id);
+
+CREATE TRIGGER trg_user_cart_items_updated_at
+  BEFORE UPDATE ON user_cart_items
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- ============================================================
+-- 10. COUPONS
 -- Cupons de desconto por percentual
 -- Rotas: GET /coupons/validate, GET/POST /admin/coupons
 -- ============================================================
@@ -192,7 +214,7 @@ CREATE TRIGGER trg_coupons_updated_at
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- ============================================================
--- 10. ORDERS
+-- 11. ORDERS
 -- Pedidos realizados pelos clientes
 -- O endereço de entrega é desnormalizado para preservar histórico
 -- Rotas: GET /orders, GET /orders/:id, POST /orders, PATCH /admin/orders/:id/status
@@ -243,7 +265,7 @@ CREATE TRIGGER trg_orders_updated_at
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- ============================================================
--- 11. ORDER_ITEMS
+-- 12. ORDER_ITEMS
 -- Itens de cada pedido (snapshot do preço no momento da compra)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS order_items (
@@ -260,7 +282,7 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order_id   ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);
 
 -- ============================================================
--- 12. PAYMENTS
+-- 13. PAYMENTS
 -- Transações de pagamento vinculadas a pedidos
 -- Rotas: POST /payments/intent, POST /payments/webhook
 -- ============================================================
@@ -284,7 +306,7 @@ CREATE TRIGGER trg_payments_updated_at
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- ============================================================
--- 13. REVIEWS
+-- 14. REVIEWS
 -- Avaliações de produtos por usuários autenticados
 -- Rotas: GET /products/:productId/reviews, POST /products/:productId/reviews
 -- Regra: 1 review por usuário por produto (UNIQUE constraint)

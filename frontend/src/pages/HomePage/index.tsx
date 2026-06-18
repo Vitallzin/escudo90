@@ -122,9 +122,18 @@ export function HomePage() {
           </div>
 
           <div className="product-grid">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {featuredProducts.length > 0
+              ? featuredProducts.map((product) => <ProductCard key={product.id} product={product} />)
+              : Array.from({ length: 6 }, (_, index) => (
+                  <div className="product-card-skeleton" key={index} aria-hidden="true">
+                    <span />
+                    <div>
+                      <strong />
+                      <p />
+                      <p />
+                    </div>
+                  </div>
+                ))}
           </div>
         </section>
 

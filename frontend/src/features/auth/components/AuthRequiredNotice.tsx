@@ -10,7 +10,7 @@ type AuthRequiredNoticeProps = {
 
 export function AuthRequiredNotice({
   title = 'Entre para continuar',
-  message = 'Para usar esse recurso, voce precisa acessar sua conta.',
+  message = 'Para usar esse recurso, você precisa acessar sua conta.',
   compact = false,
 }: AuthRequiredNoticeProps) {
   return (
