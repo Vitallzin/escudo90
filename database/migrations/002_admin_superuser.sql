@@ -299,7 +299,8 @@ CREATE TABLE IF NOT EXISTS translations (
 -- ============================================================
 -- VIEWS DE APOIO PARA RELATORIOS
 -- ============================================================
-CREATE OR REPLACE VIEW admin_dashboard_summary AS
+CREATE OR REPLACE VIEW admin_dashboard_summary
+WITH (security_invoker = true) AS
 SELECT
   (SELECT COUNT(*) FROM orders) AS total_orders,
   (SELECT COALESCE(SUM(total), 0) FROM orders WHERE status <> 'cancelled') AS gross_revenue,
@@ -307,7 +308,8 @@ SELECT
   (SELECT COUNT(*) FROM users WHERE role = 'customer') AS total_customers,
   (SELECT COUNT(*) FROM coupons WHERE active = true) AS active_coupons;
 
-CREATE OR REPLACE VIEW admin_logs_export AS
+CREATE OR REPLACE VIEW admin_logs_export
+WITH (security_invoker = true) AS
 SELECT
   id::text,
   'admin_action' AS log_type,
