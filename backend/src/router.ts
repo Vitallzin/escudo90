@@ -53,7 +53,7 @@ export function createRouter(routes: RouteDefinition[]) {
       return acc
     }, {})
     const body = method === 'GET' || method === 'DELETE' ? undefined : await readJsonBody(req)
-    const user = getUserFromRequest(req)
+    const user = await getUserFromRequest(req)
 
     if (route.auth && !user) {
       throw new ApiError(401, 'Autenticação obrigatória')

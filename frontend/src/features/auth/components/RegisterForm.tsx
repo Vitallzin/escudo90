@@ -51,13 +51,7 @@ export function RegisterForm() {
         document: onlyDigits(form.document ?? ''),
       })
       authenticate({
-        user: {
-          name: result.user.name,
-          email: result.user.email,
-          role: result.user.role,
-          phone: result.user.phone,
-          document: result.user.document,
-        },
+        user: result.user,
         token: result.token,
       })
       setStatus('success')

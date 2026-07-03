@@ -12,6 +12,7 @@ export type User = {
   role: UserRole
   phone?: string
   document?: string
+  firebaseIdToken?: string
   addresses: Address[]
   favorites: string[]
   createdAt: string

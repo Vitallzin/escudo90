@@ -34,7 +34,9 @@ function loadStoredPositions() {
 function persistPositions() {
   try {
     window.sessionStorage.setItem(scrollStorageKey, JSON.stringify(Object.fromEntries(scrollPositions)))
-  } catch {}
+  } catch {
+    return
+  }
 }
 
 function saveCurrentPosition(persist = false) {

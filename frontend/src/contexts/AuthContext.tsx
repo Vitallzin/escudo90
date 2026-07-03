@@ -1,5 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { onIdTokenChanged } from 'firebase/auth'
+import { useEffect, useState, type ReactNode } from 'react'
 import { AuthContext, type AuthSession } from './auth-context'
+import { AuthService } from '../services/authService'
+import { firebaseAuth } from '../config/firebase'
 
 const AUTH_STORAGE_KEY = 'escudo90:auth'
 
@@ -28,12 +31,38 @@ function readStoredSession(): AuthSession | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => readStoredSession())
 
+  useEffect(() => {
+    return onIdTokenChanged(firebaseAuth, (firebaseUser) => {
+      if (!firebaseUser) {
+        return
+      }
+
+      void firebaseUser.getIdToken().then((token) => {
+        setSession((currentSession) => {
+          if (!currentSession || currentSession.user.id !== firebaseUser.uid) {
+            return currentSession
+          }
+
+          const nextSession = {
+            ...currentSession,
+            token,
+          }
+
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession))
+
+          return nextSession
+        })
+      })
+    })
+  }, [])
+
   function authenticate(nextSession: AuthSession) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession))
     setSession(nextSession)
   }
 
   function logout() {
+    void AuthService.logout()
     localStorage.removeItem(AUTH_STORAGE_KEY)
     setSession(null)
   }

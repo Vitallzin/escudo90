@@ -38,10 +38,13 @@ export function Header() {
       return
     }
 
-    setIsFavoriteBumping(true)
-    const timeout = window.setTimeout(() => setIsFavoriteBumping(false), 420)
+    const startTimeout = window.setTimeout(() => setIsFavoriteBumping(true), 0)
+    const endTimeout = window.setTimeout(() => setIsFavoriteBumping(false), 420)
 
-    return () => window.clearTimeout(timeout)
+    return () => {
+      window.clearTimeout(startTimeout)
+      window.clearTimeout(endTimeout)
+    }
   }, [isAuthenticated, totalFavorites])
 
   function isNavActive(path: string) {

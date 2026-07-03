@@ -1,3 +1,12 @@
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from 'firebase/auth'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { firebaseAuth, firestore } from '../config/firebase'
+
 export type AuthUser = {
   id: string
   name: string
@@ -28,47 +37,73 @@ export type AuthResponse = {
   token: string
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
-
-async function request<TResponse>(path: string, options: RequestInit) {
-  let response: Response
-
-  try {
-    response = await fetch(`${API_URL}${path}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    })
-  } catch {
-    throw new Error('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
-  }
-
-  const payload = (await response.json()) as { data?: TResponse; error?: { message?: string } }
-
-  if (!response.ok) {
-    throw new Error(payload.error?.message ?? 'Não foi possível concluir a solicitação')
-  }
-
-  if (!payload.data) {
-    throw new Error('Resposta invalida do servidor')
-  }
-
-  return payload.data
-}
-
 export const AuthService = {
-  register(payload: RegisterPayload) {
-    return request<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
+  async register(payload: RegisterPayload): Promise<AuthResponse> {
+    if (payload.password !== payload.confirmPassword) {
+      throw new Error('As senhas nao conferem')
+    }
+
+    if (!payload.acceptTerms) {
+      throw new Error('Aceite os termos para criar sua conta')
+    }
+
+    const credential = await createUserWithEmailAndPassword(firebaseAuth, payload.email, payload.password)
+    const createdAt = new Date().toISOString()
+
+    await updateProfile(credential.user, { displayName: payload.name })
+
+    const user: AuthUser = {
+      id: credential.user.uid,
+      name: payload.name,
+      email: credential.user.email ?? payload.email,
+      role: 'customer',
+      phone: payload.phone,
+      document: payload.document,
+      createdAt,
+    }
+
+    await setDoc(doc(firestore, 'users', credential.user.uid), {
+      ...user,
+      favorites: [],
+      addresses: [],
     })
+
+    return {
+      user,
+      token: await credential.user.getIdToken(),
+    }
   },
-  login(payload: LoginPayload) {
-    return request<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+
+  async login(payload: LoginPayload): Promise<AuthResponse> {
+    const credential = await signInWithEmailAndPassword(firebaseAuth, payload.email, payload.password)
+    const profileSnapshot = await getDoc(doc(firestore, 'users', credential.user.uid))
+    const profile = profileSnapshot.data() as Partial<AuthUser> | undefined
+
+    const user: AuthUser = {
+      id: credential.user.uid,
+      name: profile?.name ?? credential.user.displayName ?? credential.user.email ?? '',
+      email: credential.user.email ?? payload.email,
+      role: profile?.role ?? 'customer',
+      phone: profile?.phone,
+      document: profile?.document,
+      createdAt: profile?.createdAt ?? new Date().toISOString(),
+    }
+
+    if (!profileSnapshot.exists()) {
+      await setDoc(doc(firestore, 'users', credential.user.uid), {
+        ...user,
+        favorites: [],
+        addresses: [],
+      })
+    }
+
+    return {
+      user,
+      token: await credential.user.getIdToken(),
+    }
+  },
+
+  async logout() {
+    await signOut(firebaseAuth)
   },
 }

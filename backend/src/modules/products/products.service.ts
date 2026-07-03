@@ -1,34 +1,23 @@
 import { store } from '../../database/store.ts'
-import { isSupabaseConfigured, supabaseAdmin, supabase } from '../../config/supabase.ts'
 import type { Product } from '../../types.ts'
 import { assert } from '../../utils/api-error.ts'
 import { createId } from '../../utils/id.ts'
+import { firestore, isFirebaseConfigured } from '../../config/firebase.ts'
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 
-type ProductRow = {
-  id: string
-  name: string
-  club: string
-  season: string
-  category_id: string
-  league: string
-  country: string
-  description: string | null
-  price: number | string
-  old_price: number | string | null
-  rating: number | string
-  reviews_count: number
-  stock: number
-  badge: string | null
-  active: boolean
-  created_at: string
+type ProductDocument = Partial<Product> & {
+  category_id?: string
+  old_price?: number | string | null
+  reviews_count?: number
+  created_at?: string
   product_images?: { url: string; position: number }[]
   product_sizes?: { size: string }[]
   product_colors?: { color: string }[]
 }
 
 export async function listProducts(query: URLSearchParams) {
-  const supabaseProducts = await listSupabaseProducts()
-  const source = supabaseProducts ?? store.products
+  const firebaseProducts = await listFirebaseProducts()
+  const source = firebaseProducts ?? store.products
   const search = query.get('search')?.toLowerCase()
   const category = query.get('category')
   const league = query.get('league')
@@ -48,15 +37,15 @@ export async function listProducts(query: URLSearchParams) {
 }
 
 export async function getProductById(id: string) {
-  const supabaseProduct = await getSupabaseProductById(id)
-  const product = supabaseProduct ?? store.products.find((item) => item.id === id && item.active)
+  const firebaseProduct = await getFirebaseProductById(id)
+  const product = firebaseProduct ?? store.products.find((item) => item.id === id && item.active)
 
   assert(product, 404, 'Produto nao encontrado')
 
   return product
 }
 
-export function createProduct(input: Record<string, unknown>) {
+export async function createProduct(input: Record<string, unknown>) {
   const product: Product = {
     id: String(input.id ?? createId('prd')),
     name: String(input.name ?? '').trim(),
@@ -83,93 +72,133 @@ export function createProduct(input: Record<string, unknown>) {
   assert(product.price > 0, 422, 'Preco deve ser maior que zero')
   assert(product.stock >= 0, 422, 'Estoque nao pode ser negativo')
 
-  store.products.push(product)
+  const savedInDatabase = await saveFirebaseProduct(product)
+
+  if (!savedInDatabase) {
+    store.products.push(product)
+  }
+
   return product
 }
 
-export function updateProduct(id: string, input: Record<string, unknown>) {
+export async function updateProduct(id: string, input: Record<string, unknown>) {
   const product = store.products.find((item) => item.id === id)
-  assert(product, 404, 'Produto nao encontrado')
+  const firebaseProduct = product ? null : await getFirebaseProductById(id)
+  const currentProduct = product ?? firebaseProduct
 
-  Object.assign(product, {
+  assert(currentProduct, 404, 'Produto nao encontrado')
+
+  const updatedProduct = {
+    ...currentProduct,
     ...input,
-    price: input.price === undefined ? product.price : Number(input.price),
-    oldPrice: input.oldPrice === undefined ? product.oldPrice : Number(input.oldPrice),
-    stock: input.stock === undefined ? product.stock : Number(input.stock),
-  })
+    price: input.price === undefined ? currentProduct.price : Number(input.price),
+    oldPrice: input.oldPrice === undefined ? currentProduct.oldPrice : Number(input.oldPrice),
+    stock: input.stock === undefined ? currentProduct.stock : Number(input.stock),
+  } as Product
 
-  return product
+  const savedInDatabase = await updateFirebaseProduct(id, updatedProduct)
+
+  if (product) {
+    Object.assign(product, updatedProduct)
+  } else if (!savedInDatabase) {
+    store.products.push(updatedProduct)
+  }
+
+  return updatedProduct
 }
 
-async function listSupabaseProducts() {
-  const client = supabaseAdmin ?? supabase
-
-  if (!isSupabaseConfigured || !client) {
+async function listFirebaseProducts() {
+  if (!isFirebaseConfigured || !firestore) {
     return null
   }
 
-  const { data, error } = await client
-    .from<ProductRow[]>('products')
-    .select(
-      '*, product_images(url, position), product_sizes(size), product_colors(color)',
-    )
-    .eq('active', true)
-    .order('created_at', { ascending: false })
+  try {
+    const snapshot = await getDocs(collection(firestore, 'products'))
+    const products = snapshot.docs
+      .map((document) => mapProductDocument(document.id, document.data() as ProductDocument))
+      .filter((product) => product.active)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
-  if (error || !data) {
+    return products.length > 0 ? products : null
+  } catch {
     return null
   }
-
-  return data.map(mapProductRow)
 }
 
-async function getSupabaseProductById(id: string) {
-  const client = supabaseAdmin ?? supabase
-
-  if (!isSupabaseConfigured || !client) {
+async function getFirebaseProductById(id: string) {
+  if (!isFirebaseConfigured || !firestore) {
     return null
   }
 
-  const { data, error } = await client
-    .from<ProductRow>('products')
-    .select(
-      '*, product_images(url, position), product_sizes(size), product_colors(color)',
-    )
-    .eq('id', id)
-    .eq('active', true)
-    .single()
+  try {
+    const snapshot = await getDoc(doc(firestore, 'products', id))
 
-  if (error || !data) {
+    if (!snapshot.exists()) {
+      return null
+    }
+
+    const product = mapProductDocument(snapshot.id, snapshot.data() as ProductDocument)
+
+    return product.active ? product : null
+  } catch {
     return null
   }
-
-  return mapProductRow(data)
 }
 
-function mapProductRow(row: ProductRow): Product {
+async function saveFirebaseProduct(product: Product) {
+  if (!isFirebaseConfigured || !firestore) {
+    return false
+  }
+
+  try {
+    await setDoc(doc(firestore, 'products', product.id), product)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function updateFirebaseProduct(id: string, product: Product) {
+  if (!isFirebaseConfigured || !firestore) {
+    return false
+  }
+
+  try {
+    await updateDoc(doc(firestore, 'products', id), { ...product })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function mapProductDocument(id: string, row: ProductDocument): Product {
   return {
-    id: row.id,
-    name: row.name,
-    club: row.club,
-    season: row.season,
-    categoryId: row.category_id,
-    league: row.league,
-    country: row.country,
+    id: String(row.id ?? id),
+    name: String(row.name ?? ''),
+    club: String(row.club ?? ''),
+    season: String(row.season ?? ''),
+    categoryId: String(row.categoryId ?? row.category_id ?? ''),
+    league: String(row.league ?? ''),
+    country: String(row.country ?? ''),
     description: row.description ?? '',
     price: Number(row.price),
-    oldPrice: row.old_price === null ? undefined : Number(row.old_price),
-    rating: Number(row.rating),
-    reviewsCount: row.reviews_count,
-    stock: row.stock,
+    oldPrice:
+      row.oldPrice === undefined && row.old_price === undefined
+        ? undefined
+        : Number(row.oldPrice ?? row.old_price),
+    rating: Number(row.rating ?? 0),
+    reviewsCount: Number(row.reviewsCount ?? row.reviews_count ?? 0),
+    stock: Number(row.stock ?? 0),
     badge: row.badge ?? 'Novo',
-    colors: row.product_colors?.map((item) => item.color) ?? [],
-    sizes: row.product_sizes?.map((item) => item.size) ?? [],
+    colors: row.colors ?? row.product_colors?.map((item) => item.color) ?? [],
+    sizes: row.sizes ?? row.product_sizes?.map((item) => item.size) ?? [],
     images:
+      row.images ??
       row.product_images
         ?.slice()
         .sort((a, b) => a.position - b.position)
         .map((item) => item.url) ?? [],
-    active: row.active,
-    createdAt: row.created_at,
+    active: row.active ?? true,
+    createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
   }
 }

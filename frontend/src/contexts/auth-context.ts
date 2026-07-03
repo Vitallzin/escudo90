@@ -1,11 +1,13 @@
 import { createContext } from 'react'
 
 export type User = {
+  id: string
   name: string
   email: string
   role: 'customer' | 'admin'
   phone?: string
   document?: string
+  createdAt: string
 }
 
 export type AuthSession = {

@@ -26,7 +26,7 @@ const adminLogs = [
     type: 'system_error',
     actor: 'Sistema',
     action: 'Falha temporaria no webhook de pagamento',
-    ip: 'supabase-edge',
+    ip: 'firebase-functions',
     createdAt: '2026-06-17T22:44:00.000Z',
     severity: 'medium',
   },

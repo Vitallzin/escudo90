@@ -1,67 +1,58 @@
-import { isSupabaseConfigured, supabase, supabaseAdmin } from '../../config/supabase.ts'
 import type { Product, User } from '../../types.ts'
 import { getProductById } from '../products/products.service.ts'
+import {
+  deleteFirestoreDocument,
+  listFirestoreDocumentsByUser,
+  setFirestoreDocument,
+} from '../../services/firestore-rest.service.ts'
 
 type FavoriteRow = {
-  product_id: string
+  productId?: string
+  product_id?: string
 }
 
-function getClient() {
-  return (supabaseAdmin ?? supabase) as any
-}
-
-async function getFavoriteIdsFromDatabase(userId: string) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
+async function getFavoriteIdsFromDatabase(user: User) {
+  if (!user.firebaseIdToken) {
     return null
   }
 
-  const { data, error } = await client.from('user_favorites').select('product_id').eq('user_id', userId)
+  const documents = await listFirestoreDocumentsByUser('userFavorites', user.id, user.firebaseIdToken)
 
-  if (error || !data) {
+  if (!documents) {
     return null
   }
 
-  return (data as FavoriteRow[]).map((row) => row.product_id)
+  return documents.map((document) => {
+    const row = document.data as FavoriteRow
+
+    return String(row.productId ?? row.product_id ?? '')
+  })
 }
 
-async function addFavoriteToDatabase(userId: string, productId: string) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
+async function addFavoriteToDatabase(user: User, productId: string) {
+  if (!user.firebaseIdToken) {
     return false
   }
 
-  const { error } = await client.from('user_favorites').upsert(
-    {
-      user_id: userId,
-      product_id: productId,
-    },
-    { onConflict: 'user_id,product_id' },
-  )
-
-  return !error
+  return setFirestoreDocument('userFavorites', createUserProductDocumentId(user.id, productId), user.firebaseIdToken, {
+    userId: user.id,
+    productId,
+    user_id: user.id,
+    product_id: productId,
+    createdAt: new Date().toISOString(),
+  })
 }
 
-async function removeFavoriteFromDatabase(userId: string, productId: string) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
+async function removeFavoriteFromDatabase(user: User, productId: string) {
+  if (!user.firebaseIdToken) {
     return false
   }
 
-  const { error } = await client
-    .from('user_favorites')
-    .delete()
-    .eq('user_id', userId)
-    .eq('product_id', productId)
-
-  return !error
+  return deleteFirestoreDocument('userFavorites', createUserProductDocumentId(user.id, productId), user.firebaseIdToken)
 }
 
 export async function listFavorites(user: User) {
-  const databaseFavoriteIds = await getFavoriteIdsFromDatabase(user.id)
+  const databaseFavoriteIds = await getFavoriteIdsFromDatabase(user)
   const favoriteIds = databaseFavoriteIds ?? user.favorites
   const products = await Promise.all(
     favoriteIds.map(async (productId) => {
@@ -79,7 +70,7 @@ export async function listFavorites(user: User) {
 export async function addFavorite(user: User, productId: string) {
   await getProductById(productId)
 
-  const savedInDatabase = await addFavoriteToDatabase(user.id, productId)
+  const savedInDatabase = await addFavoriteToDatabase(user, productId)
 
   if (!savedInDatabase && !user.favorites.includes(productId)) {
     user.favorites.push(productId)
@@ -91,7 +82,7 @@ export async function addFavorite(user: User, productId: string) {
 }
 
 export async function removeFavorite(user: User, productId: string) {
-  const removedFromDatabase = await removeFavoriteFromDatabase(user.id, productId)
+  const removedFromDatabase = await removeFavoriteFromDatabase(user, productId)
 
   if (!removedFromDatabase) {
     user.favorites = user.favorites.filter((id) => id !== productId)
@@ -99,5 +90,9 @@ export async function removeFavorite(user: User, productId: string) {
 }
 
 export async function getFavoriteIds(user: User) {
-  return (await getFavoriteIdsFromDatabase(user.id)) ?? user.favorites
+  return (await getFavoriteIdsFromDatabase(user)) ?? user.favorites
+}
+
+function createUserProductDocumentId(userId: string, productId: string) {
+  return `${userId}_${productId}`.replace(/[^a-zA-Z0-9_-]/g, '_')
 }

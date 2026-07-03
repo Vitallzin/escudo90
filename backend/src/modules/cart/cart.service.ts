@@ -1,13 +1,19 @@
-import { isSupabaseConfigured, supabase, supabaseAdmin } from '../../config/supabase.ts'
 import { store } from '../../database/store.ts'
 import type { CartItem, Product, User } from '../../types.ts'
 import { assert } from '../../utils/api-error.ts'
 import { getProductById } from '../products/products.service.ts'
+import {
+  deleteFirestoreDocument,
+  listFirestoreDocumentsByUser,
+  setFirestoreDocument,
+} from '../../services/firestore-rest.service.ts'
 
 type CartItemRow = {
-  product_id: string
+  productId?: string
+  product_id?: string
   size: string
   quantity: number
+  updatedAt?: string
 }
 
 export type CartItemWithProduct = {
@@ -16,96 +22,93 @@ export type CartItemWithProduct = {
   quantity: number
 }
 
-function getClient() {
-  return (supabaseAdmin ?? supabase) as any
-}
-
 function getStoreCartItems(userId: string) {
   return store.cartItems.filter((item) => item.userId === userId)
 }
 
-async function getDatabaseCartItems(userId: string) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
+async function getDatabaseCartItems(user: User) {
+  if (!user.firebaseIdToken) {
     return null
   }
 
-  const { data, error } = await client
-    .from('user_cart_items')
-    .select('product_id, size, quantity')
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
+  const documents = await listFirestoreDocumentsByUser('userCartItems', user.id, user.firebaseIdToken)
 
-  if (error || !data) {
+  if (!documents) {
     return null
   }
 
-  return (data as CartItemRow[]).map(mapCartRow)
+  return documents
+    .map((document) => document.data as CartItemRow)
+    .sort((a, b) => String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? '')))
+    .map(mapCartRow)
 }
 
-async function upsertDatabaseCartItem(userId: string, item: CartItem) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
+async function upsertDatabaseCartItem(user: User, item: CartItem) {
+  if (!user.firebaseIdToken) {
     return false
   }
 
-  const currentItems = await getDatabaseCartItems(userId)
+  const currentItems = await getDatabaseCartItems(user)
   const currentItem = currentItems?.find(
     (candidate) => candidate.productId === item.productId && candidate.size === item.size,
   )
   const nextQuantity = (currentItem?.quantity ?? 0) + item.quantity
 
-  const { error } = await client.from('user_cart_items').upsert(
+  return setFirestoreDocument(
+    'userCartItems',
+    createUserProductDocumentId(user.id, item.productId, item.size),
+    user.firebaseIdToken,
     {
-      user_id: userId,
+      userId: user.id,
       product_id: item.productId,
+      productId: item.productId,
       size: item.size,
       quantity: nextQuantity,
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
-    { onConflict: 'user_id,product_id,size' },
+  )
+}
+
+async function removeDatabaseCartItem(user: User, productId: string, size: string) {
+  if (!user.firebaseIdToken) {
+    return false
+  }
+
+  return deleteFirestoreDocument(
+    'userCartItems',
+    createUserProductDocumentId(user.id, productId, size),
+    user.firebaseIdToken,
+  )
+}
+
+async function clearDatabaseCart(user: User) {
+  if (!user.firebaseIdToken) {
+    return false
+  }
+
+  const documents = await listFirestoreDocumentsByUser('userCartItems', user.id, user.firebaseIdToken)
+
+  if (!documents) {
+    return false
+  }
+
+  await Promise.all(
+    documents.map((document) => deleteFirestoreDocument('userCartItems', document.id, user.firebaseIdToken!)),
   )
 
-  return !error
-}
-
-async function removeDatabaseCartItem(userId: string, productId: string, size: string) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
-    return false
-  }
-
-  const { error } = await client
-    .from('user_cart_items')
-    .delete()
-    .eq('user_id', userId)
-    .eq('product_id', productId)
-    .eq('size', size)
-
-  return !error
-}
-
-async function clearDatabaseCart(userId: string) {
-  const client = getClient()
-
-  if (!isSupabaseConfigured || !client) {
-    return false
-  }
-
-  const { error } = await client.from('user_cart_items').delete().eq('user_id', userId)
-
-  return !error
+  return true
 }
 
 function mapCartRow(row: CartItemRow): CartItem {
   return {
-    productId: row.product_id,
+    productId: String(row.productId ?? row.product_id ?? ''),
     size: row.size,
     quantity: Number(row.quantity),
   }
+}
+
+function createUserProductDocumentId(userId: string, productId: string, size: string) {
+  return `${userId}_${productId}_${size}`.replace(/[^a-zA-Z0-9_-]/g, '_')
 }
 
 async function hydrateCartItems(items: CartItem[]) {
@@ -128,13 +131,13 @@ async function hydrateCartItems(items: CartItem[]) {
   return hydratedItems.filter(Boolean) as CartItemWithProduct[]
 }
 
-async function getCartItems(userId: string) {
-  return (await getDatabaseCartItems(userId)) ?? getStoreCartItems(userId)
+async function getCartItems(user: User) {
+  return (await getDatabaseCartItems(user)) ?? getStoreCartItems(user.id)
 }
 
 export async function getCart(user: User) {
   return {
-    items: await hydrateCartItems(await getCartItems(user.id)),
+    items: await hydrateCartItems(await getCartItems(user)),
   }
 }
 
@@ -152,7 +155,7 @@ export async function addCartItem(user: User, input: Record<string, unknown>) {
   assert(product.sizes.includes(item.size), 422, `Tamanho indisponivel para ${product.name}`)
   assert(product.stock >= item.quantity, 422, `Estoque insuficiente para ${product.name}`)
 
-  const savedInDatabase = await upsertDatabaseCartItem(user.id, item)
+  const savedInDatabase = await upsertDatabaseCartItem(user, item)
 
   if (!savedInDatabase) {
     const currentItem = store.cartItems.find(
@@ -174,7 +177,7 @@ export async function addCartItem(user: User, input: Record<string, unknown>) {
 }
 
 export async function removeCartItem(user: User, productId: string, size: string) {
-  const removedFromDatabase = await removeDatabaseCartItem(user.id, productId, size)
+  const removedFromDatabase = await removeDatabaseCartItem(user, productId, size)
 
   if (!removedFromDatabase) {
     store.cartItems = store.cartItems.filter(
@@ -184,7 +187,7 @@ export async function removeCartItem(user: User, productId: string, size: string
 }
 
 export async function clearCart(user: User) {
-  const clearedFromDatabase = await clearDatabaseCart(user.id)
+  const clearedFromDatabase = await clearDatabaseCart(user)
 
   if (!clearedFromDatabase) {
     store.cartItems = store.cartItems.filter((item) => item.userId !== user.id)
